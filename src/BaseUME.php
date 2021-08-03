@@ -12,7 +12,6 @@ declare(strict_types=1);
 
 namespace mikisan\core\basis\ume;
 
-use \mikisan\core\basis\dto\Dto;
 use \mikisan\core\basis\ume\UMESettings;
 use \mikisan\core\exception\UMEException;
 
@@ -30,28 +29,50 @@ interface UME
     const   RESTful = "RESTFUL", DATASET = "DATASET";
     
     const   REQUEST = "REQUEST", COOKIE = "COOKIE", FILES = "FILES";
+    
+    const   TYPE_STRING = 0, TYPE_INTEGER = 1, TYPE_REAL = 2, TYPE_FILE = 3;
 }
 
 abstract class BaseUME implements UME
 {
     
-    protected   $types = [];
+    protected $types = [];
+    protected $rules = [];
     
     // バリデーション定義で許可されている連想配列キー
-    private     $allowed_keys   = ["name", "type", "min", "max", "choice", "auto_correct", "trim", "null_byte", "method", "index", "require"];
+    private $allowed_keys   = ["name", "type", "min", "max", "choice", "auto_correct", "filter", "trim", "null_byte", "method", "index", "require"];
     
-    public function __construct(Dto $dto)
+    public function __construct()
     {
         // デフォルトバリデーション定義の登録
         $this->register_types(UMESettings::types());
+        
+        // バリデーションルールの登録
+        $this->register_rules($this->rules());
     }
     
     public function register_types(array $types): UME
     {
-        foreach($types as $key => $setting)
-        {
-            $this->types[$key] = $setting;
-        }
+        $this->types = array_merge($this->types, $types);
+        
+        return $this;
+    }
+    
+    public function register_rules(array $rules): UME
+    {
+        $this->rules = array_merge($this->rules, $rules);
+        
+        return $this;
+    }
+    
+    public function get_types(): array
+    {
+        return $this->types;
+    }
+    
+    public function get_rules(): array
+    {
+        return $this->rules;
     }
     
     /**
@@ -73,7 +94,7 @@ abstract class BaseUME implements UME
     
     public function validate(): UME
     {     
-        foreach($this->validators as $key => $conditions)
+        foreach($this->rules as $key => $conditions)
         {
             $this->validate_condition($key, $condigions);
             
@@ -96,19 +117,4 @@ abstract class BaseUME implements UME
         }
     }
     
-    /**
-     * ハイフン相当文字の半角ハイフン化
-     * 
-     * @param type $req
-     * @return type
-     */
-    public function adjustHyphen(string $req) : string
-    {
-        $req = mb_ereg_replace("ー", "-", $req);
-        $req = mb_ereg_replace("ｰ", "-", $req);
-        $req = mb_ereg_replace("―", "-", $req);
-        $req = mb_ereg_replace("－", "-", $req);
-        $req = mb_ereg_replace("‐", "-", $req);
-        return $req;
-    }
 }

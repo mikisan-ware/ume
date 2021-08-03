@@ -12,12 +12,12 @@ declare(strict_types=1);
 
 namespace mikisan\pine\app;
 
-use \mikisan\core\basis\dto\Dto;
+use \mikisan\core\basis\ume\UME;
 
 class ChildUME extends ModuleCommonUME
 {
     
-    public function rules(): array
+    protected function rules(): array
     {
         return [
             "page" => [

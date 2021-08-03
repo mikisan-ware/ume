@@ -12,13 +12,13 @@ declare(strict_types=1);
 
 namespace mikisan\pine\app;
 
-use \mikisan\core\basis\dto\Dto;
+use \mikisan\core\basis\ume\UME;
 
 abstract class SiteCommonUME extends \mikisan\core\basis\ume\BaseUME
 {
-    public function __construct(Dto $dto)
+    public function __construct()
     {
-        parent::__construct($dto);
+        parent::__construct();
         
         $this->site_common_types();
     }
@@ -39,7 +39,7 @@ abstract class SiteCommonUME extends \mikisan\core\basis\ume\BaseUME
                 "correct"   => function($value)
                 {
                     $value  = mb_convert_kana($value, "n", "UTF-8");
-                    $value  = $this->adjustHyphen($value);
+                    $value  = $this->adjust_hyphen($value);
                     return $value;
                 },
                 "rule"      => function($value)
@@ -58,7 +58,7 @@ abstract class SiteCommonUME extends \mikisan\core\basis\ume\BaseUME
                 "correct"   => function($value)
                 {
                     $value  = mb_convert_kana($value, "a", "UTF-8");
-                    $value  = $this->adjustHyphen($value);
+                    $value  = $this->adjust_hyphen($value);
                     return $value;
                 },
                 "rule"      => function($value){ return preg_match("/\A\d{3}-\d{4}\z/", $value); },
@@ -104,4 +104,21 @@ abstract class SiteCommonUME extends \mikisan\core\basis\ume\BaseUME
                         ;
         return preg_match("/\A{$regexp}\z/", $email);
     }
+    
+    /**
+     * ハイフン相当文字の半角ハイフン化
+     * 
+     * @param type $value
+     * @return type
+     */
+    public function adjust_hyphen(string $value) : string
+    {
+        $value  = preg_replace("/ー/u", "-", $value);
+        $value  = preg_replace("/ｰ/u", "-", $value);
+        $value  = preg_replace("/―/u", "-", $value);
+        $value  = preg_replace("/－/u", "-", $value);
+        $value  = preg_replace("/‐/u", "-", $value);
+        return $value;
+    }
+    
 }

@@ -12,8 +12,7 @@ declare(strict_types=1);
 
 use \mikisan\core\util\autoload\Autoload;
 use \PHPUnit\Framework\TestCase;
-use \mikisan\core\util\ume\BaseUME;
-use \mikisan\core\util\ume\ChildUME;
+use \mikisan\pine\app\ChildUME;
 
 $project_root = realpath(__DIR__ . "/../../../../");
 require "{$project_root}/vendor/autoload.php";
@@ -25,6 +24,19 @@ Autoload::register(__DIR__ . "/../tests");
 class ChildUME_Testclass extends TestCase
 {
     use TestCaseTrait;
+    
+    private $ume;
 
-    //put your code here
+    public function setUp(): void
+    {
+        $this->ume  = new ChildUME();
+    }
+    
+    public function test_get_rules()
+    {
+        $rules  = $this->ume->get_rules();
+        
+        print_r($rules);
+    }
+    
 }

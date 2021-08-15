@@ -13,63 +13,77 @@ declare(strict_types=1);
 use \mikisan\core\util\autoload\Autoload;
 use \PHPUnit\Framework\TestCase;
 use \mikisan\core\basis\ume\UME;
-use \mikisan\core\basis\ume\Dto;
 use \mikisan\core\basis\ume\DATASOURCE;
-use \mikisan\core\exception\UMEException;
+use \mikisan\core\util\router\Router;
 
 $project_root = realpath(__DIR__ . "/../../../../");
 require "{$project_root}/vendor/autoload.php";
-require "{$project_root}/tests/TestCaseTrait.php";
+require_once "{$project_root}/tests/TestCaseTrait.php";
 require "{$project_root}/core/basis/ume/src/BaseUME.php";
+
 Autoload::register(__DIR__ . "/../src", true);
+Autoload::register(__DIR__ . "/../tests", true);
 
 class DATASOURCE_Test extends TestCase
 {
     use TestCaseTrait;
-    
-    private $dto;
-    
+
     public function setUp(): void
     {
-        $this->dto  = new Dto();
-        $this->dto->settings->empty_value   = "";
+        $_POST["param1"]    = "abc";
+        $_POST["param2"]    = "123";
+        $_GET["param1"]     = "def";
+        $_GET["param2"]     = "456";
+        $_COOKIE["param1"]  = "ghi";
+        $_COOKIE["param2"]  = "789";
     }
     
-    public function test_get()
+    public function test_get_post()
     {
-        $key        = "test";
-        $conditions = [
-            "name" => "テスト", "type" => "text", "min" => 0, "max" => 64, 
-            "auto_correct" => true, "trim" => UME::TRIM_ALL, "null_byte" => false,
-            "method" => UME::GET, "require" => false
-        ];
-        $_GET["test"] = "あいうえお";
-        $_POST["test"] = "かきくけこ";
-        $_COOKIE["test"] = "さしすせそ";
-        //
-        $conditions["method"]   = "get";
-        $this->assertEquals("あいうえお", DATASOURCE::get($this->dto, $key, $conditions));
-        //
-        $conditions["method"]   = "post";
-        $this->assertEquals("かきくけこ", DATASOURCE::get($this->dto, $key, $conditions));
-        //
-        $conditions["method"]   = "cookie";
-        $this->assertEquals("さしすせそ", DATASOURCE::get($this->dto, $key, $conditions));
+        $this->assertSame("abc", DATASOURCE::get("post", "param1"));
+        $this->assertSame("123", DATASOURCE::get("post", "param2"));
+        $this->assertSame(null, DATASOURCE::get("post", "param3"));
     }
     
-    public function test_get_not_set()
+    public function test_get_get()
     {
-        $key        = "test";
-        $conditions = [
-            "name" => "テスト", "type" => "text", "min" => 0, "max" => 64, 
-            "auto_correct" => true, "trim" => UME::TRIM_ALL, "null_byte" => false,
-            "method" => UME::GET, "require" => false
-        ];
-        $_GET["test"] = null;
-        $this->dto->settings->empty_value   = "None";
-        //
-        $conditions["method"]   = "get";
-        $this->assertEquals("None", DATASOURCE::get($this->dto, $key, $conditions));
+        $this->assertSame("def", DATASOURCE::get("get", "param1"));
+        $this->assertSame("456", DATASOURCE::get("get", "param2"));
+        $this->assertSame(null, DATASOURCE::get("get", "param3"));
+    }
+    
+    public function test_get_cookie()
+    {
+        $this->assertSame("ghi", DATASOURCE::get("cookie", "param1"));
+        $this->assertSame("789", DATASOURCE::get("cookie", "param2"));
+        $this->assertSame(null, DATASOURCE::get("cookie", "param3"));
+    }
+    
+    public function test_get_restful()
+    {
+        $yml_path   = __DIR__ . "/routes.yml";
+        $_SERVER["SERVER_NAME"]     = "striking-forces.jp";
+        $_SERVER["REQUEST_METHOD"]  = "PUT";
+        $_SERVER["REQUEST_URI"]     = "/admin/service/master/357/register/246";
+        Router::resolve($yml_path);
+        
+        $this->assertSame("357", DATASOURCE::get("restful", "id"));
+        $this->assertSame("246", DATASOURCE::get("restful", "num"));
+        $this->assertSame(null, DATASOURCE::get("restful", "param1"));
+    }
+    
+    public function test_get_args()
+    {
+        $yml_path   = __DIR__ . "/routes.yml";
+        $_SERVER["SERVER_NAME"]     = "striking-forces.jp";
+        $_SERVER["REQUEST_METHOD"]  = "FETCH";
+        $_SERVER["REQUEST_URI"]     = "/admin/service/show/abcd/efgh/987";
+        Router::resolve($yml_path);
+        
+        $this->assertSame("abcd", DATASOURCE::get("args", 0));
+        $this->assertSame("efgh", DATASOURCE::get("args", 1));
+        $this->assertSame("987", DATASOURCE::get("args", 2));
+        $this->assertSame(null, DATASOURCE::get("args", 3));
     }
     
 }

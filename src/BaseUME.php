@@ -26,7 +26,7 @@ interface UME
     
     const   GET = "GET", POST = "POST", DELETE = "DELETE", PUT = "PUT", PATCH = "PATCH"; 
     const   OPTIONS = "OPTIONS", HEAD = "HEAD", LINK = "LINK", ULINK = "ULINK", TRACE = "TRACE";
-    const   RESTful = "RESTFUL", DATASET = "DATASET";
+    const   RESTful = "RESTFUL", ARGS = "ARGS", DATASET = "DATASET";
     
     const   REQUEST = "REQUEST", COOKIE = "COOKIE", FILES = "FILES";
     
@@ -36,31 +36,51 @@ interface UME
 abstract class BaseUME implements UME
 {
     
-    protected $types = [];
-    protected $rules = [];
+    protected $types    = [];
+    protected $filters  = [];
+    protected $closers  = [];
+    protected $rules    = [];
+    protected $labels   = [];
+    protected $obj      = null;
     
     // バリデーション定義で許可されている連想配列キー
     private $allowed_keys   = ["name", "type", "min", "max", "choice", "auto_correct", "filter", "trim", "null_byte", "method", "index", "require"];
     
     public function __construct()
     {
+        $this->obj  = new \stdClass();
+        
         // デフォルトバリデーション定義の登録
         $this->register_types(UMESettings::types());
         
+        // バリデーションフィルタの登録
+        $this->register_filters(UMESettings::filters());
+        
+        // バリデーションクローザーの登録
+        $this->register_closers(UMESettings::closers());
+        
         // バリデーションルールの登録
-        $this->register_rules($this->rules());
+        if(method_exists($this, "rules"))
+        {
+            $this->register_rules($this->rules());
+        }
+        
+        // I18Nラベルの登録
+        if(method_exists($this, "labels"))
+        {
+            $this->register_labels($this->labels());
+        }
     }
     
-    public function register_types(array $types): UME
+    /**
+     * デフォルトバリデーション定義の登録・ゲッター
+     * 
+     * @param   array   $types
+     * @return  \mikisan\core\basis\ume\UME
+     */
+    protected function register_types(array $types): UME
     {
         $this->types = array_merge($this->types, $types);
-        
-        return $this;
-    }
-    
-    public function register_rules(array $rules): UME
-    {
-        $this->rules = array_merge($this->rules, $rules);
         
         return $this;
     }
@@ -70,10 +90,78 @@ abstract class BaseUME implements UME
         return $this->types;
     }
     
+    /**
+     * バリデーションフィルタの登録・ゲッター
+     * 
+     * @param   array   $filters
+     * @return  \mikisan\core\basis\ume\UME
+     */
+    protected function register_filters(array $filters): UME
+    {
+        $this->filters  = array_merge($this->filters, $filters);
+        
+        return $this;
+    }
+    
+    public function get_filters(): array
+    {
+        return $this->filters;
+    }
+    
+    /**
+     * バリデーションクローザーの登録・ゲッター
+     * 
+     * @param   array   $closers
+     * @return  \mikisan\core\basis\ume\UME
+     */
+    protected function register_closers(array $closers): UME
+    {
+        $this->closers  = array_merge($this->closers, $closers);
+        
+        return $this;
+    }
+    
+    public function get_closers(): array
+    {
+        return $this->closers;
+    }
+    
+    /**
+     * バリデーションルールの登録・ゲッター
+     * 
+     * @param   array   $rules
+     * @return  \mikisan\core\basis\ume\UME
+     */
+    protected function register_rules(array $rules): UME
+    {
+        $this->rules = array_merge($this->rules, $rules);
+        
+        return $this;
+    }
+    
     public function get_rules(): array
     {
         return $this->rules;
     }
+    
+    /**
+     * I18Nラベルの登録・ゲッター
+     * 
+     * @param   array   $labels
+     * @return  \mikisan\core\basis\ume\UME
+     */
+    protected function register_labels(array $labels): UME
+    {
+        $this->labels = array_merge($this->labels, $labels);
+        
+        return $this;
+    }
+    
+    public function get_labels(): array
+    {
+        return $this->labels;
+    }
+    
     
     /**
      * $conditionsに、許可されていないキーが使用されている場合はExceptionを投げる
@@ -92,27 +180,31 @@ abstract class BaseUME implements UME
         }
     }
     
-    public function validate(): UME
-    {     
+    public function validate(Dto $dto): UME
+    {
+        $response       = new \stdClass();
+        $response->VE   = [];
+        $response->src  = [];
+        
         foreach($this->rules as $key => $conditions)
         {
-            $this->validate_condition($key, $condigions);
+            $this->validate_condition($key, $conditions);
             
             switch(true)
             {
                 case preg_match("|\A([^%]+)_(%_)*%(\[\])?\z|u", $key):
                     
-                    HIERARCHY::parse(self::$dto, $key, $conditions);   // 階層連番パラメター
+                    HIERARCHY::parse(self::$dto, $key, $conditions);    // 階層連番パラメター
                     break;
                 
                 case preg_match("|\A.+\[\]\z|u", $key):
                     
-                    $this->type_array(self::$dto, $key, $conditions);  // 配列
+                    $this->type_array(self::$dto, $key, $conditions);   // 配列
                     break;
                     
                 default:
                     
-                    NORMAL::parse(self::$dto, $key, $conditions);      // 通常パラメター取得
+                    NORMAL::validate($this, $key, $conditions, $response);      // 通常パラメター取得
             }
         }
     }

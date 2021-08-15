@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace mikisan\core\basis\ume;
 
+use \mikisan\core\util\router\Router;
 use \mikisan\core\exception\UMEException;
 
 class DATASOURCE
@@ -19,49 +20,22 @@ class DATASOURCE
     
     /**
      * データの取得
-     * 
-     * @param   \mikisan\core\util\ume\Dto  $dto
-     * @param   string                      $key
-     * @param   array                       $conditions
-     * @return  type
-     * @throws  ValidationErrorException
      */
-    public static function get(Dto $dto, string $key, array $conditions)
+    public static function get(string $target_method, mixed $key)
     {
-        $method = strtoupper($conditions["method"]);
+        $method = strtoupper($target_method);
         
         switch (true)
         {
-            case $method === UME::POST:     return $_POST[$key]     ?? $dto->settings->empty_value;
-            case $method === UME::GET:      return $_GET[$key]      ?? $dto->settings->empty_value;
-            case $method === UME::COOKIE:   return $_COOKIE[$key]   ?? $dto->settings->empty_value;
-            
-            case $method === UME::FILES:
-            
-                $req = (isset($_FILES[$key])) ? $_FILES[$key] : null;
-                if(isset($req["name"]))
-                {
-                    if(is_array($req["name"]))
-                    {
-                        // multipleの場合は、配列を再構築する
-                        $req = $this->rebuildFileInfoArray($req);
-                    }
-                    else
-                    {
-                        // singleファイルの場合はマイムタイプを調べセット
-                        $req["real_type"]  = (!empty($req["tmp_name"]))? MIME::getMIME($req["tmp_name"]) : "";
-                    }
-                }
+            case $method === UME::POST:     return $_POST[$key]     ?? UMESettings::EMPTY_VALUE;
+            case $method === UME::GET:      return $_GET[$key]      ?? UMESettings::EMPTY_VALUE;
+            case $method === UME::COOKIE:   return $_COOKIE[$key]   ?? UMESettings::EMPTY_VALUE;
+            case $method === UME::RESTful:  return Router::route()->params[$key]    ?? UMESettings::EMPTY_VALUE;
+            case $method === UME::ARGS:     return Router::route()->args[$key]      ?? UMESettings::EMPTY_VALUE;
                 
-                return $req;
                 
-            case $method === UME::RESTful:
-                
-                return DATASTORE::instance()->route->params[(int)$conditions["index"]];
-                
-            case $method === UME::DATASET:
-                
-                return $this->dataset[(int)$conditions["index"]];
+            // ↓ 未Test
+            case $method === UME::DATASET:  return $this->dataset[$key]             ?? UMESettings::EMPTY_VALUE;
                 
             case $method === UME::HEAD:
             case $method === UME::OPTIONS:
@@ -75,11 +49,30 @@ class DATASOURCE
                 $params = [];
                 parse_str(file_get_contents("php://input"), $params);
                 
-                return isset($params[$key]) ? $params[$key] : $this->empty_param_value;
+                return isset($params[$key]) ? $params[$key] : UMESettings::EMPTY_VALUE;
+
+            case $method === UME::FILES:
+            
+                $file   = (isset($_FILES[$key])) ? $_FILES[$key] : null;
+                if(isset($file["name"]))
+                {
+                    if(is_array($file["name"]))
+                    {
+                        // multipleの場合は、配列を再構築する
+                        $file = $this->rebuildFileInfoArray($file);
+                    }
+                    else
+                    {
+                        // singleファイルの場合はマイムタイプを調べセット
+                        $file["real_type"]  = (!empty($file["tmp_name"]))? MIME::getMIME($file["tmp_name"]) : "";
+                    }
+                }
+                
+                return $file;
                 
             default:
                 
-                throw new UMEException(get_called_class() . " のバリデーション設定内に記述された、キー {$key} の method の値が不正です。[{$conditions["method"]}]");
+                throw new UMEException("バリデーション設定内に記述された、キー [{$key}] の method [{$target_method}] は定義されていません。");
         }
     }
     

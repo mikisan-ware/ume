@@ -1,0 +1,13 @@
+## test Routes YAML.
+---
+routes:
+    admin:
+        service:
+            master:
+                "{id}/register/{num}@put":
+                    module: admin/service/master
+                    action: register
+            "show/**@fetch":
+                    module: admin/service/master
+                    action: show
+        

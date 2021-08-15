@@ -10,7 +10,12 @@
   </coverage>
   <testsuites>
     <testsuite name="Object_Freezer">
-      <file>tests/ChildUME_Test.php</file>
+      <file>tests/DATASOURCE_Test.php</file>
+      <file>tests/FILTER_Test.php</file>
+      <file>tests/CORRECTOR_Test.php</file>
+      <file>tests/VALIDATOR_Test.php</file>
+      <file>tests/TYPECAST_Test.php</file>
+      <file>tests//CLOSER_Test.php</file>
     </testsuite>
   </testsuites>
 </phpunit>

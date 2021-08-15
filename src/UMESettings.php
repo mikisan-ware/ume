@@ -12,10 +12,14 @@ declare(strict_types=1);
 
 namespace mikisan\core\basis\ume;
 
+use \mikisan\core\exception\UMEException;
+use \mikisan\core\util\ex\EX;
+
 class UMESettings
 {
     
-    public  $empty_value    = "";
+    const   EMPTY_VALUE = null;
+    const   ENCODE      = "UTF-8";
     
     public static function types(): array
     {
@@ -23,29 +27,45 @@ class UMESettings
             // digit 全て数字か？
             "digit" => [
                 "type"      => UME::TYPE_STRING,
-                "correct"   => function($value){ return mb_convert_kana($req, "n", "UTF-8"); },
+                "correct"   => function($value){ return mb_convert_kana($value, "n", self::ENCODE); },      // n:「全角」数字を「半角」に変換します。
                 "rule"      => function($value){ return ctype_digit($value); },
-                "error"     => function($key, $conditions){ return "[{$conditions["name"]}] には数字以外が含まれています。"; }
+                "error"     => function($label, $conditions){ return "[{$label}] には数字以外が含まれています。"; }
             ],
             // alphabet 全てアルファベットか？
             "alphabet" => [
                 "type"      => UME::TYPE_STRING,
-                "correct"   => function($value){ return mb_convert_kana($value, "r", "UTF-8"); },
+                "correct"   => function($value){ return mb_convert_kana($value, "r", self::ENCODE); },      // r:「全角」英字を「半角」に変換します。
                 "rule"      => function($value){ return ctype_alpha($value); },
-                "error"     => function($key, $conditions){ return "[{$conditions["name"]}] には英字以外が含まれています。"; }
+                "error"     => function($label, $conditions){ return "[{$label}] には英字以外が含まれています。"; }
             ],
             // int
             "int" => [
                 "type"      => UME::TYPE_INTEGER,
                 "correct"   => function($value)
                 {
-                    $value  = mb_convert_kana($value, "a", "UTF-8");
-                    $value  = $obj->adjustHyphen($value);
+                    $value  = mb_convert_kana($value, "n", self::ENCODE);       // n:「全角」数字を「半角」に変換します。
+                    $value  = EX::normalize_hyphen($value);
                     return $value;
                 },
-                "rule"      => function($value){ return preg_match("/\A\-?([1-9]\d*|0)\z/", $value); },
-                "error"     => function($key, $conditions){ return "[{$conditions["name"]}] は整数でなければなりません。"; }
+                "rule"      => function($value){ return (bool)preg_match("/\A\-?([1-9]\d*|0)\z/u", $value); },
+                "error"     => function($label, $conditions){ return "[{$label}] は整数でなければなりません。"; }
             ]
+        ];
+    }
+    
+    public static function filters(): array
+    {
+        return [
+            "base64"    => function($value) { return base64_decode($value, false); },
+            "htmlspec"  => function($value) { return htmlspecialchars_decode($value, ENT_QUOTES|ENT_HTML5); }
+        ];
+    }
+    
+    public static function closers(): array
+    {
+        return [
+            "base64"    => function($value) { return base64_encode($value); },
+            "htmlspec"  => function($value) { return htmlspecialchars($value, ENT_QUOTES|ENT_HTML5, self::ENCODE); }
         ];
     }
     

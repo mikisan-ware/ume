@@ -105,20 +105,4 @@ abstract class SiteCommonUME extends \mikisan\core\basis\ume\BaseUME
         return preg_match("/\A{$regexp}\z/", $email);
     }
     
-    /**
-     * ハイフン相当文字の半角ハイフン化
-     * 
-     * @param type $value
-     * @return type
-     */
-    public function adjust_hyphen(string $value) : string
-    {
-        $value  = preg_replace("/ー/u", "-", $value);
-        $value  = preg_replace("/ｰ/u", "-", $value);
-        $value  = preg_replace("/―/u", "-", $value);
-        $value  = preg_replace("/－/u", "-", $value);
-        $value  = preg_replace("/‐/u", "-", $value);
-        return $value;
-    }
-    
 }

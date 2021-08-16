@@ -18,8 +18,9 @@ use \mikisan\core\util\ex\EX;
 class UMESettings
 {
     
-    const   EMPTY_VALUE = null;
-    const   ENCODE      = "UTF-8";
+    const   EMPTY_VALUE         = null;
+    const   ENCODE              = "UTF-8";
+    const   DEFAULT_MAX_STRING  = 4096;
     
     public static function types(): array
     {

@@ -42,6 +42,7 @@ abstract class BaseUME implements UME
     protected $rules    = [];
     protected $labels   = [];
     protected $obj      = null;
+    protected $from_encoding    = "UTF-8";
     
     // バリデーション定義で許可されている連想配列キー
     private $allowed_keys   = ["name", "type", "min", "max", "choice", "auto_correct", "filter", "trim", "null_byte", "method", "index", "require"];
@@ -71,6 +72,9 @@ abstract class BaseUME implements UME
             $this->register_labels($this->labels());
         }
     }
+    
+    public function set_from_encoding($value): void { $this->from_encoding = $value; }
+    public function get_from_encoding(): string     { return $this->from_encoding; }
     
     /**
      * デフォルトバリデーション定義の登録・ゲッター

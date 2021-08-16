@@ -30,7 +30,9 @@ class VALIDATOR
             throw new UMEException("バリデーション定義 [{$conditions["type"]}] の rule は正しい callable として定義されていません。");
         }
         
+        // バリデーション実行
         $result = $types["rule"]($value);
+        
         if(!$result)
         {
             if(!is_callable($types["error"]))

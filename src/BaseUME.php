@@ -14,6 +14,7 @@ namespace mikisan\core\basis\ume;
 
 use \mikisan\core\basis\ume\UMESettings;
 use \mikisan\core\exception\UMEException;
+use \mikisan\core\basis\ume\NORMALIZE;
 
 interface UME
 {
@@ -192,23 +193,27 @@ abstract class BaseUME implements UME
         
         foreach($this->rules as $key => $conditions)
         {
+            // バリデートコンディションの正規化
+            $conditions = NORMALIZE::condition($conditions);
+            
+            
             $this->validate_condition($key, $conditions);
             
             switch(true)
             {
                 case preg_match("|\A([^%]+)_(%_)*%(\[\])?\z|u", $key):
                     
-                    HIERARCHY::parse(self::$dto, $key, $conditions);    // 階層連番パラメター
+                    HIERARCHY::validate(self::$dto, $key, $conditions);         // 階層連番項目のバリデート
                     break;
                 
                 case preg_match("|\A.+\[\]\z|u", $key):
                     
-                    $this->type_array(self::$dto, $key, $conditions);   // 配列
+                    MULTIPLE::validate(self::$dto, $key, $conditions);          // 配列項目のバリデート
                     break;
                     
                 default:
                     
-                    NORMAL::validate($this, $key, $conditions, $response);      // 通常パラメター取得
+                    SINGLE::validate($this, $key, $conditions, $response);      // 単一項目のバリデート
             }
         }
     }

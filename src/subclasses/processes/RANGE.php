@@ -19,7 +19,7 @@ use \mikisan\core\util\ex\EX;
 class RANGE
 {
     
-    public static function do(int $type, $value, string $key, array $condition, \stdClass $response): bool
+    public static function do(UME $ume, $value, string $key, array $conditions, \stdClass $response): bool
     {
         $type   = $conditions["type"];
         $labels = $ume->get_labels();

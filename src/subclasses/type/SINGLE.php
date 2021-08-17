@@ -15,9 +15,19 @@ namespace mikisan\core\basis\ume;
 use \mikisan\core\basis\ume\UME;
 use \mikisan\core\basis\ume\DATASOURCE;
 
-class NORMAL
+class SINGLE
 {
     
+    /**
+     * 単一項目のバリデーション
+     * 
+     * @param   UME         $ume
+     * @param   string      $key
+     * @param   array       $conditions
+     * @param   \stdClass   $response
+     * @return  void
+     * @throws  UMEException
+     */
     public static function validate(UME $ume, string $key, array $conditions, \stdClass $response) : void
     {
         $should_validate    = true;
@@ -44,12 +54,12 @@ class NORMAL
     /**
      * $conditions["method"] => UME::FILES 以外のバリデート
      * 
-     * @param UME $ume
-     * @param string $type
-     * @param string $key
-     * @param array $conditions
-     * @param \stdClass $response
-     * @return string
+     * @param   UME         $ume
+     * @param   string      $type
+     * @param   string      $key
+     * @param   array       $conditions
+     * @param   \stdClass   $response
+     * @return  string
      */
     private static function validate_value(UME $ume, string $type, string $key, array $conditions, \stdClass $response): string
     {
@@ -84,8 +94,8 @@ class NORMAL
             
             // レンジチェック
             (isset($conditions["choice"]))
-                    ? COICE::do($type, $value, $key, $condition, $response)
-                    : RANGE::do($type, $value, $key, $condition, $response)
+                    ? CHOICE::do($ume, $value, $key, $condition, $response)
+                    : RANGE::do($ume, $value, $key, $condition, $response)
                     ;
         }
         
@@ -95,13 +105,12 @@ class NORMAL
     /**
      * $conditions["method"] => UME::FILES のバリデート
      * 
-     * @param UME $ume
-     * @param string $type
-     * @param string $key
-     * @param array $conditions
-     * @param \stdClass $response
-     * @return array
-     * @throws UMEException
+     * @param   UME         $ume
+     * @param   string      $type
+     * @param   string      $key
+     * @param   array       $conditions
+     * @param   \stdClass   $response
+     * @return  array
      */
     private static function validate_files(UME $ume, string $type, string $key, array $conditions, \stdClass $response): array
     {
@@ -113,48 +122,13 @@ class NORMAL
         $labels = $ume->get_labels();
         $label  = $labels["ja_JP"][$key] ?? $key;
         
-        // 正規にアップロードされたファイルか？
-        if(!defined("DEBUG") && !is_uploaded_file($value["tmp_name"]))
-        {
-            throw new UMEException("[{$label}] は正規のアップロードファイルではありません。");
-        }
-        
-        // Directory Traversal 対策
-        if(preg_match("|(\A\.|\.\z)|u", $value["name"]))
-        {
-            throw new UMEException("先頭または末尾が . の名前のファイルのアップロードは許可されていません。[{$label}]");
-        }
-        if(preg_match("|\A\.|u", $value["name"]))
-        {
-            throw new UMEException("/ を含む名前のファイルのアップロードは許可されていません。[{$label}]");
-        }
+        // アップロードファイルのセキュリティチェック
+        FILECHECK::do($ume, $value, $key);
         
         // 拡張子チェック
-        if(isset($conditions["choice"]))
-        {
-            $ext            = MIME::getExtentionByMIMEType($value["real_type"]);
-            $allowed_exts   = self::get_allowed_exts($conditions["choice"], $label);
-            if(!in_array($ext, $allowed_exts, true))
-            {
-                $response->VE[$key] = "{$value["real_type"]} ファイルのアップロードは許可されていません。[{$label}]";
-            }
-        }
+        CHOICE::extdo($ume, $value, $key, $condition, $response);
         
         return $value;
-    }
-    
-    private static function get_allowed_exts($choice, string $label): array
-    {
-        $allowed_exts    = [];
-        if(is_array($choice))   { $allowed_exts     = $choice; }
-        if(is_string($choice))  { $allowed_exts[]   = explode(",", $choice); }
-        
-        if(!is_array($allowed_exts))
-        {
-            throw new UMEException("[{$label}] の choice の型が不正です。");
-        }
-        
-        return $allowed_exts;
     }
     
     /**

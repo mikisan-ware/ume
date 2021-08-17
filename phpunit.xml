@@ -15,7 +15,8 @@
       <file>tests/CORRECTOR_Test.php</file>
       <file>tests/VALIDATOR_Test.php</file>
       <file>tests/TYPECAST_Test.php</file>
-      <file>tests//CLOSER_Test.php</file>
+      <file>tests/CLOSER_Test.php</file>
+      <file>tests/CHOICE_Test.php</file>
     </testsuite>
   </testsuites>
 </phpunit>

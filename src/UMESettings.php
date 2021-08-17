@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace mikisan\core\basis\ume;
 
+use \mikisan\core\exception\UME;
 use \mikisan\core\exception\UMEException;
 use \mikisan\core\util\ex\EX;
 
@@ -21,6 +22,8 @@ class UMESettings
     const   EMPTY_VALUE         = null;
     const   ENCODE              = "UTF-8";
     const   DEFAULT_MAX_STRING  = 4096;
+    const   DEFAULT_METHOD      = UME::POST;
+    const   DEFAULT_REQUIRE     = false;
     
     public static function types(): array
     {

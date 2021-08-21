@@ -19,15 +19,29 @@ class TYPECAST
     
     public static function do(int $type, $value)
     {
+        if(is_null($value)) { return null; }
+        
         switch(true)
         {
-            case $type === UME::TYPE_INTEGER:   return (int)$value;
-            case $type === UME::TYPE_REAL:      return (double)$value;
+            case $type === UME::TYPE_INTEGER:   return self::cast_int($value);
+            case $type === UME::TYPE_REAL:      return self::cast_real($value);
                 
             case $type === UME::TYPE_STRING:    
             default:
                 return (string)$value;
         }
+    }
+    
+    private static function cast_int($value): int
+    {
+        if(EX::empty($value))   { return null; }
+        return (int)$value;
+    }
+    
+    private static function cast_real($value): float
+    {
+        if(EX::empty($value))   { return null; }
+        return (double)$value;
     }
     
 }

@@ -90,15 +90,4 @@ class EX
         return $args[count($args) - 1];
     }
     
-    /**
-     * ハイフン相当文字の正規化（半角ハイフンに統一する）
-     * 
-     * @param   string  $value
-     * @return  string
-     */
-    public static function normalize_hyphen(string $value) : string
-    {
-        return preg_replace("/(ー|ｰ|―|－|‐)/u", "-", $value);
-    }
-    
 }

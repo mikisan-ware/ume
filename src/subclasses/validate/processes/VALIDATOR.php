@@ -32,20 +32,25 @@ class VALIDATOR
         
         // バリデーション実行
         $result = $types["rule"]($value);
-        
-        if(!$result)
+        if(!is_bool($result))
         {
-            if(!is_callable($types["error"]))
-            {
-                throw new UMEException("バリデーション定義 [{$type}] の error は正しい callable　として定義されていません。");
-            }
-            
-            $label  = $labels["ja_JP"][$key] ?? $key;
-            
-            $response->VE[$key]  = $types["error"]($label, $conditions);
+            $data_type  = gettype($result);
+            throw new UMEException("バリデーション定義 [{$conditions["type"]}] の rule の返り値が bool 型ではありません。[type: {$data_type}]");
         }
         
-        return $result;
+        if($result) { return true; }
+        
+        if(!is_callable($types["error"]))
+        {
+            throw new UMEException("バリデーション定義 [{$type}] の error は正しい callable　として定義されていません。");
+        }
+        
+        // バリデーションエラーメッセージ
+        $label  = $labels["ja_JP"][$key] ?? $key;
+        $response->VE[$key]     = $types["error"]($label, $conditions) . $response->index;
+        $response->has_error    = true;
+        
+        return false;
     }
     
 }

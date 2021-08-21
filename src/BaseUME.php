@@ -42,7 +42,7 @@ abstract class BaseUME implements UME
     protected $closers  = [];
     protected $rules    = [];
     protected $labels   = [];
-    protected $obj      = null;
+    protected $dataset  = null;
     protected $from_encoding    = "UTF-8";
     
     // バリデーション定義で許可されている連想配列キー
@@ -50,8 +50,6 @@ abstract class BaseUME implements UME
     
     public function __construct()
     {
-        $this->obj  = new \stdClass();
-        
         // デフォルトバリデーション定義の登録
         $this->register_types(UMESettings::types());
         
@@ -64,6 +62,14 @@ abstract class BaseUME implements UME
         // バリデーションルールの登録
         if(method_exists($this, "rules"))
         {
+            foreach($this->rules() as $condition)
+            {
+                if(!isset($this->types[$condition["type"]]))
+                {
+                    throw new UMEException("バリデーションタイプ [{$condition["type"]}] は定義されていません。");
+                }
+            }
+            
             $this->register_rules($this->rules());
         }
         
@@ -167,6 +173,30 @@ abstract class BaseUME implements UME
         return $this->labels;
     }
     
+    /**
+     * データセットの登録・ゲッター
+     * 
+     * @param   array   $dataset
+     * @return  \mikisan\core\basis\ume\UME
+     */
+    protected function register_dataset(array $dataset): UME
+    {
+        if(!is_array($src))
+        {
+            $data_type  = gettype($dataset);
+            throw new UMEException("UME::register_dataset() に渡された入力値が配列ではありません。[type: {$data_type}]");
+        }
+        
+        $this->dataset  = $dataset;
+        
+        return $this;
+    }
+    
+    public function get_dataset(): array
+    {
+        return $this->dataset;
+    }
+    
     
     /**
      * $conditionsに、許可されていないキーが使用されている場合はExceptionを投げる
@@ -187,35 +217,52 @@ abstract class BaseUME implements UME
     
     public function validate(Dto $dto): UME
     {
-        $response       = new \stdClass();
-        $response->VE   = [];
-        $response->src  = [];
+        $response               = new \stdClass();
+        $response->has_error    = false;
+        $response->VE           = [];
+        $response->src          = [];
+        $response->dist         = [];
         
         foreach($this->rules as $key => $conditions)
         {
+            // リクエスト取得
+            $src    = DATASOURCE::get($ume, $conditions["method"], $key);
+            $response->src["key"]   = $src;
+            
             // バリデートコンディションの正規化
-            $conditions = NORMALIZE::condition($conditions);
-            
-            
-            $this->validate_condition($key, $conditions);
+            $conditions = self::normarize_condition($conditions);
             
             switch(true)
             {
                 case preg_match("|\A([^%]+)_(%_)*%(\[\])?\z|u", $key):
                     
-                    HIERARCHY::validate(self::$dto, $key, $conditions);         // 階層連番項目のバリデート
+                    $value  = HIERARCHY::validate($this, $type, $key, $conditions, $response);    // 階層連番項目のバリデート
                     break;
                 
                 case preg_match("|\A.+\[\]\z|u", $key):
                     
-                    MULTIPLE::validate(self::$dto, $key, $conditions);          // 配列項目のバリデート
+                    $value  = MULTIPLE::validate($this, $src, $type, $key, $conditions, $response);     // 配列項目のバリデート
                     break;
                     
                 default:
                     
-                    SINGLE::validate($this, $key, $conditions, $response);      // 単一項目のバリデート
+                    $value  = SINGLE::validate($this, $src, $type, $key, $conditions, $response);       // 単一項目のバリデート
             }
+            
+            $response->dest["key"]  = $values;
         }
+    }
+    
+    private static function normarize_condition(array $conditions): array
+    {
+        $conditions["type"]             = $conditions["type"]           ?? "text";
+        $conditions["auto_correct"]     = $conditions["auto_correct"]   ?? true;
+        $conditions["filter"]           = $conditions["filter"]         ?? null;
+        $conditions["trim"]             = $conditions["trim"]           ?? UME::TRIM_ALL;
+        $conditions["null_byte"]        = $conditions["null_byte"]      ?? false;
+        $conditions["method"]           = $conditions["method"]         ?? UMESetting::DEFAULT_METHOD;
+        $conditions["require"]          = $conditions["type"]           ?? UMESetting::DEFAULT_REQUIRE;
+        return $conditions;
     }
     
 }

@@ -14,6 +14,7 @@ namespace mikisan\core\basis\ume;
 
 use \mikisan\core\util\router\Router;
 use \mikisan\core\exception\UMEException;
+use \mikisan\core\util\mime\MIME;
 
 class DATASOURCE
 {
@@ -21,21 +22,18 @@ class DATASOURCE
     /**
      * データの取得
      */
-    public static function get(string $target_method, mixed $key)
+    public static function get(UME $ume, string $target_method, mixed $key)
     {
         $method = strtoupper($target_method);
         
         switch (true)
         {
-            case $method === UME::POST:     return $_POST[$key]     ?? UMESettings::EMPTY_VALUE;
-            case $method === UME::GET:      return $_GET[$key]      ?? UMESettings::EMPTY_VALUE;
-            case $method === UME::COOKIE:   return $_COOKIE[$key]   ?? UMESettings::EMPTY_VALUE;
-            case $method === UME::RESTful:  return Router::route()->params[$key]    ?? UMESettings::EMPTY_VALUE;
-            case $method === UME::ARGS:     return Router::route()->args[$key]      ?? UMESettings::EMPTY_VALUE;
-                
-                
-            // ↓ 未Test
-            case $method === UME::DATASET:  return $this->dataset[$key]             ?? UMESettings::EMPTY_VALUE;
+            case $method === UME::POST:     return $_POST[$key]         ?? null;
+            case $method === UME::GET:      return $_GET[$key]          ?? null;
+            case $method === UME::COOKIE:   return $_COOKIE[$key]       ?? null;
+            case $method === UME::RESTful:  return Router::route()->params[$key]    ?? null;
+            case $method === UME::ARGS:     return Router::route()->args[$key]      ?? null;
+            case $method === UME::DATASET:  return $ume->get_dataset()  ?? null;
                 
             case $method === UME::HEAD:
             case $method === UME::OPTIONS:
@@ -49,31 +47,56 @@ class DATASOURCE
                 $params = [];
                 parse_str(file_get_contents("php://input"), $params);
                 
-                return isset($params[$key]) ? $params[$key] : UMESettings::EMPTY_VALUE;
+                return $params[$key] ?? null;
 
             case $method === UME::FILES:
             
                 $file   = (isset($_FILES[$key])) ? $_FILES[$key] : null;
-                if(isset($file["name"]))
-                {
-                    if(is_array($file["name"]))
-                    {
-                        // multipleの場合は、配列を再構築する
-                        $file = $this->rebuildFileInfoArray($file);
-                    }
-                    else
-                    {
-                        // singleファイルの場合はマイムタイプを調べセット
-                        $file["real_type"]  = (!empty($file["tmp_name"]))? MIME::getMIME($file["tmp_name"]) : "";
-                    }
-                }
+                if(!isset($file["name"]))   { return null; }
                 
-                return $file;
-                
+                return (is_array($file["tmp_name"]))
+                            ? self::rebuild_file_info($file)                    // multiple の場合は、配列を再構築する
+                            : self::set_real_mime_type($file)                   // 単一ファイルの場合はマイムタイプを調べセット
+                            ;
             default:
                 
                 throw new UMEException("バリデーション設定内に記述された、キー [{$key}] の method [{$target_method}] は定義されていません。");
         }
+    }
+    
+    /**
+     * $_FILES を、ファイル毎の要素に組み替える
+     * 
+     * @param   array   $files
+     * @return  array
+     */
+    private static function rebuild_file_info(array $files): array
+    {
+        $tmp    = [];
+        foreach($files["name"] as $idx => $val)
+        {
+            $f              = [];
+            $f["name"]      = $files["name"][$idx];
+            $f["type"]      = $files["type"][$idx];
+            $f["real_type"] = (!empty($files["tmp_name"][$idx])) ? MIME::getMIME($files["tmp_name"][$idx]) : "";
+            $f["tmp_name"]  = $files["tmp_name"][$idx];
+            $f["error"]     = $files["error"][$idx];
+            $f["size"]      = $files["size"][$idx];
+            $tmp[]          = $f;
+        }
+        return $tmp;
+    }
+    
+    /**
+     * ファイルを検査して正しいMIME-Typeをセットする
+     * 
+     * @param   array   $file
+     * @return  array
+     */
+    private static function set_real_mime_type(array $file): array
+    {
+        $file["real_type"]  = (!empty($file["tmp_name"]))? MIME::getMIME($file["tmp_name"]) : "";
+        return $file;
     }
     
     public static function all(string $key, array $conditions)

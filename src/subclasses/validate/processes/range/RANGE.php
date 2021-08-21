@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace mikisan\core\basis\ume;
 
+use \mikisan\core\basis\ume\UME;
 use \mikisan\core\basis\ume\UMESettings;
 use \mikisan\core\exception\UMEException;
 use \mikisan\core\util\ex\EX;
@@ -19,11 +20,10 @@ use \mikisan\core\util\ex\EX;
 class RANGE
 {
     
-    public static function do(UME $ume, $value, string $key, array $conditions, \stdClass $response): bool
+    public static function isInRange(UME $ume, $value, string $key, array $conditions, \stdClass $response): bool
     {
         $type   = $conditions["type"];
         $labels = $ume->get_labels();
-        
         $label  = $labels["ja_JP"][$key] ?? $key;
         
         switch(true)
@@ -44,14 +44,16 @@ class RANGE
         $max    = (int)$conditions["max"] ?? PHP_INT_MAX;
         
         if($min <= $value && $value <= $max)    { return true; }
+        
         if($value < $min)
         {
-            $response->VE[$key] = "[{$label}] は {$min} 以上の整数にしてください。";
+            $response->VE[$key] = "[{$label}] は {$min} 以上の整数にしてください。" . $response->index;;
         }
         if($value > $max)
         {
-            $response->VE[$key] = "[{$label}] は {$max} 以下の整数にしてください。";
+            $response->VE[$key] = "[{$label}] は {$max} 以下の整数にしてください。" . $response->index;;
         }
+        $response->has_error    = true;
         
         return false;
     }
@@ -62,14 +64,16 @@ class RANGE
         $max    = (double)$conditions["max"] ?? PHP_INT_MAX;
         
         if($min <= $value && $value <= $max)    { return true; }
+        
         if($value < $min)
         {
-            $response->VE[$key] = "[{$label}] は {$min} 以上の実数にしてください。";
+            $response->VE[$key] = "[{$label}] は {$min} 以上の実数にしてください。" . $response->index;;
         }
         if($value > $max)
         {
-            $response->VE[$key] = "[{$label}] は {$max} 以下の実数にしてください。";
+            $response->VE[$key] = "[{$label}] は {$max} 以下の実数にしてください。" . $response->index;;
         }
+        $response->has_error    = true;
         
         return false;
     }
@@ -81,14 +85,16 @@ class RANGE
         $len    = mb_strlen($value, "UTF-8");
         
         if($min <= $len && $len <= $max)    { return true; }
+        
         if($len < $min)
         {
-            $response->VE[$key] = "[{$label}] は {$min} 文字以上にしてください。";
+            $response->VE[$key] = "[{$label}] は {$min} 文字以上にしてください。" . $response->index;;
         }
         if($len > $max)
         {
-            $response->VE[$key] = "[{$label}] は {$max} 文字以下にしてください。";
+            $response->VE[$key] = "[{$label}] は {$max} 文字以下にしてください。" . $response->index;;
         }
+        $response->has_error    = true;
         
         return false;
     }
@@ -103,19 +109,22 @@ class RANGE
         $allowed_max_size   = is_int($max) ? $max : self::get_actual_size($max, $label) ;
         if($filesize === 0)
         {
-            $response->VE[$key] = "[{$label}] はアップロードできませんでした。ファイルサイズが 0 です。";
+            $response->VE[$key]     = "[{$label}] はアップロードできませんでした。ファイルサイズが 0 です。" . $response->index;;
+            $response->has_error    = true;
             return false;
         }
         if($filesize < $allowed_min_size)
         {
             $min_limit  = is_int($min) ? "{$min}Bites" : $min;
-            $response->VE[$key] = "[{$label}] のファイルサイズが小さ過ぎます。許容されているファイルサイズは {$min_limit} です。";
+            $response->VE[$key]     = "[{$label}] のファイルサイズが小さ過ぎます。許容されているファイルサイズは {$min_limit} です。" . $response->index;;
+            $response->has_error    = true;
             return false;
         }
         if($filesize > $allowed_max_size)
         {
-            $max_limit  = is_int($max) ? "{$max}Bites" : $max;
-            $response->VE[$key] = "[{$label}] のファイルサイズが大き過ぎます。許容されているファイルサイズは {$max_limit} です。";
+            $max_limit              = is_int($max) ? "{$max}Bites" : $max;
+            $response->VE[$key]     = "[{$label}] のファイルサイズが大き過ぎます。許容されているファイルサイズは {$max_limit} です。" . $response->index;;
+            $response->has_error    = true;
             return false;
         }
         

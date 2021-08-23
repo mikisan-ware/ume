@@ -22,14 +22,14 @@ class CHOICE
 {
     
     /**
-     * $value が choice で許可された値か？
+     * 入力値が choice で許可された値か？
      * 
      * @param   UME         $ume
      * @param   mixed       $value
      * @param   string      $key
      * @param   array       $conditions
      * @param   \stdClass   $response
-     * @return  bool
+     * @return  bool        入力値が choice で許可された値か？のフラグ
      */
     public static function isInListValue(UME $ume, $value, string $key, array $conditions, \stdClass $response): bool
     {

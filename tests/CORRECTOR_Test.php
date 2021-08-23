@@ -13,13 +13,15 @@ declare(strict_types=1);
 use \mikisan\core\util\autoload\Autoload;
 use \PHPUnit\Framework\TestCase;
 use \mikisan\core\basis\ume\CORRECTOR;
+use \mikisan\core\exception\UMEException;
 //
 use \mikisan\core\basis\ume\UME;
 use \mikisan\pine\app\ChildUME;
 
+require_once __DIR__ . "/../vendor/autoload.php";
 $project_root = realpath(__DIR__ . "/../../../../");
-require "{$project_root}/vendor/autoload.php";
 require_once "{$project_root}/tests/TestCaseTrait.php";
+
 Autoload::register(__DIR__ . "/../src", true);
 Autoload::register(__DIR__ . "/folder", true);
 
@@ -105,6 +107,26 @@ class CORRECTOR_Test extends TestCase
         $expect ="あいうえお-漢字-1234567890ＡＢＣＤＥＦＧｈｉｊｋｌｍｎ<script>alert(\"XSS!\");@＠ABC12345=！＃＄％＆（）-＝「」＊!#$%&()=[]*";
         $result = CORRECTOR::do($this->types[$type], $value, $conditions);
         $this->assertSame($expect, $result);
+    }
+    
+    /**
+     * オートコレクトに callable 以外が設定されている場合の例外処理
+     */
+    public function test_do_exception()
+    {
+        $key        = "test";
+        $conditions = [
+            "type" => "wrong_corrector", "min" => PHP_INT_MIN, "max" => PHP_INT_MAX, 
+            "auto_correct" => true, "filter" => null, "trim" => UME::TRIM_ALL, "null_byte" => false,
+            "method" => UME::GET, "require" => false
+        ];
+        $type   = $conditions["type"];
+        $value  = "１２３４５６７８９０";
+        //
+        $this->expectException(UMEException::class);
+        $this->expectExceptionMessage("バリデーション定義 [{$conditions["type"]}] の correct は正しい callable として定義されていません。");
+        //
+        $result = CORRECTOR::do($this->types[$type], $value, $conditions);
     }
     
 }

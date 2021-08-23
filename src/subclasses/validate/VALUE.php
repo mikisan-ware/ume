@@ -41,17 +41,22 @@ class VALUE
         $value  = self::prepare($ume, $value, $type, $conditions);
         
         // バリデーション処理
-        self::do_validate($ume, $value, $key, $conditions, $response);
+        if(REQUIREMENT::should_validate($ume, $value, $key, $conditions, $response))
+        {
+            // バリデーション処理
+            VALIDATOR::do($ume, $value, $key, $conditions, $response);
+            
+            // 値確定処理：タイプキャスト、事後フィルタ
+            $value  = self::conclude($ume, $value, $type, $conditions);
+            
+            // 許容範囲チェック
+            $is_in_range    = (isset($conditions["choice"]))
+                                    ? CHOICE::isInListValue($ume, $value, $key, $condition, $response)
+                                    : RANGE ::isInRange($ume, $value, $key, $condition, $response)
+                                    ;
+        }
         
-        // 値確定処理：タイプキャスト、事後フィルタ
-        $value  = self::conclude($ume, $value, $type, $conditions);
-
-        // 許容範囲チェック
-        $range  = (isset($conditions["choice"]))
-                        ? CHOICE::isInListValue($ume, $value, $key, $condition, $response)
-                        : RANGE ::isInRange($ume, $value, $key, $condition, $response)
-                        ;
-        return ($range) ? $value : null;
+        return $value;
     }
     
     /**
@@ -78,24 +83,6 @@ class VALUE
         $value = TRIM::do($value, $conditions);
         
         return $value;
-    }
-    
-    /**
-     * バリデーション処理
-     * 
-     * @param UME $ume
-     * @param type $value
-     * @param string $key
-     * @param array $conditions
-     * @param \stdClass $response
-     * @return bool
-     */
-    private static function do_validate(UME $ume, $value, string $key, array $conditions, \stdClass $response): bool
-    {
-        return REQUIRED::check($ume, $value, $key, $response)
-                    ? VALIDATOR::do($ume, $value, $key, $conditions, $response) // バリデーション
-                    : false
-                    ;
     }
     
     /**

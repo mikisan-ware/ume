@@ -17,6 +17,7 @@ use \mikisan\core\util\ume\NORMAL;
 $project_root = realpath(__DIR__ . "/../../../../");
 require "{$project_root}/vendor/autoload.php";
 require_once "{$project_root}/tests/TestCaseTrait.php";
+
 Autoload::register(__DIR__ . "/../src", true);
 
 class NORMAL_Test extends TestCase

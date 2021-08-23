@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace mikisan\core\basis\ume;
 
 use \mikisan\core\basis\ume\UME;
+use \mikisan\core\util\ex\EX;
 
 class TYPECAST
 {

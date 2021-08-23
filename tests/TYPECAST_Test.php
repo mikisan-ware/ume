@@ -17,9 +17,10 @@ use \mikisan\core\basis\ume\TYPECAST;
 use \mikisan\core\basis\ume\UME;
 use \mikisan\pine\app\ChildUME;
 
+require_once __DIR__ . "/../vendor/autoload.php";
 $project_root = realpath(__DIR__ . "/../../../../");
-require "{$project_root}/vendor/autoload.php";
 require_once "{$project_root}/tests/TestCaseTrait.php";
+
 Autoload::register(__DIR__ . "/../src", true);
 Autoload::register(__DIR__ . "/folder", true);
 Autoload::forceload("mikisan\core\basis\ume\BaseUME");

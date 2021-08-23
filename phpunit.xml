@@ -17,6 +17,8 @@
       <file>tests/TYPECAST_Test.php</file>
       <file>tests/CLOSER_Test.php</file>
       <file>tests/CHOICE_Test.php</file>
+      <file>tests/RANGE_Test.php</file>
+      <file>tests/REQUIREMENT_Test.php</file>
     </testsuite>
   </testsuites>
 </phpunit>

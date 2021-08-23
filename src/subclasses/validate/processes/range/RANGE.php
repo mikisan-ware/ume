@@ -20,9 +20,20 @@ use \mikisan\core\util\ex\EX;
 class RANGE
 {
     
+    /**
+     * 入力値が許容値内か？
+     * 
+     * @param   UME         $ume
+     * @param   mixed       $value
+     * @param   string      $key
+     * @param   array       $conditions
+     * @param   \stdClass   $response
+     * @return  bool        入力値が許容値内か？のフラグ
+     */
     public static function isInRange(UME $ume, $value, string $key, array $conditions, \stdClass $response): bool
     {
-        $type   = $conditions["type"];
+        $types  = $ume->get_types();
+        $type   = $types[$conditions["type"]]["type"];
         $labels = $ume->get_labels();
         $label  = $labels["ja_JP"][$key] ?? $key;
         
@@ -47,11 +58,11 @@ class RANGE
         
         if($value < $min)
         {
-            $response->VE[$key] = "[{$label}] は {$min} 以上の整数にしてください。" . $response->index;;
+            $response->VE[$key] = "[{$label}] は {$min} 以上の整数にしてください。" . $response->index;
         }
         if($value > $max)
         {
-            $response->VE[$key] = "[{$label}] は {$max} 以下の整数にしてください。" . $response->index;;
+            $response->VE[$key] = "[{$label}] は {$max} 以下の整数にしてください。" . $response->index;
         }
         $response->has_error    = true;
         
@@ -107,22 +118,17 @@ class RANGE
         
         $allowed_min_size   = is_int($min) ? $min : self::get_actual_size($min, $label) ;
         $allowed_max_size   = is_int($max) ? $max : self::get_actual_size($max, $label) ;
-        if($filesize === 0)
-        {
-            $response->VE[$key]     = "[{$label}] はアップロードできませんでした。ファイルサイズが 0 です。" . $response->index;;
-            $response->has_error    = true;
-            return false;
-        }
+        
         if($filesize < $allowed_min_size)
         {
-            $min_limit  = is_int($min) ? "{$min}Bites" : $min;
+            $min_limit  = is_int($min) ? "{$min} Bytes" : $min;
             $response->VE[$key]     = "[{$label}] のファイルサイズが小さ過ぎます。許容されているファイルサイズは {$min_limit} です。" . $response->index;;
             $response->has_error    = true;
             return false;
         }
         if($filesize > $allowed_max_size)
         {
-            $max_limit              = is_int($max) ? "{$max}Bites" : $max;
+            $max_limit              = is_int($max) ? "{$max} Bytes" : $max;
             $response->VE[$key]     = "[{$label}] のファイルサイズが大き過ぎます。許容されているファイルサイズは {$max_limit} です。" . $response->index;;
             $response->has_error    = true;
             return false;
@@ -131,12 +137,11 @@ class RANGE
         return true;
     }
 
-    private static function get_actual_size(string $max, string $label) : int
+    private static function get_actual_size(string $limit, string $label) : int
     {
-        $rule           = strtoupper($max);
+        $rule           = strtoupper($limit);
         $size           = (int)$rule;
         $unit           = preg_replace("/\d+/", "", $rule);
-        $allowed_size   = $this->getActualSize($size, $unit);
         
         switch($unit){
             case "B":       return $size;
@@ -154,7 +159,7 @@ class RANGE
             case "EIB":     return $size * pow(2, 60);
         }
         
-        throw new UMEException("[{$label}] の max で指定されたファイルサイズの単位が不正です。[{$max}]");
+        throw new UMEException("[{$label}] で指定されたファイルサイズの単位が不正です。[{$unit}]");
     }
     
 }

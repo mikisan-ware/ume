@@ -15,7 +15,7 @@ namespace mikisan\core\basis\ume;
 class TRIM
 {
     
-    public static function do(UME $ume, string $value, string $key, \stdClass $response)
+    public static function do(string $value, array $conditions): string
     {
         $trim   = $conditions["trim"];
         switch(true)
@@ -23,7 +23,9 @@ class TRIM
             case $trim === UME::TRIM_ALL:   return trim($value);
             case $trim === UME::TRIM_LEFT:  return ltrim($value);
             case $trim === UME::TRIM_RIGHT: return rtrim($value);
+                
             case $trim === UME::TRIM_NONE:
+            default:
                 return $value;
         }
     }

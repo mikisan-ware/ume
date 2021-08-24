@@ -15,7 +15,7 @@ namespace mikisan\core\basis\ume;
 class CLOSER
 {
     
-    public static function do(array $closers, string $value, array $conditions)
+    public static function do(array $closers, $value, array $conditions)
     {
         if(!isset($conditions["closer"]))   { return $value; }
         $applys    = explode("|", $conditions["closer"]);

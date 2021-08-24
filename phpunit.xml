@@ -19,6 +19,8 @@
       <file>tests/CHOICE_Test.php</file>
       <file>tests/RANGE_Test.php</file>
       <file>tests/REQUIREMENT_Test.php</file>
+      <file>tests/TRIM_Test.php</file>
+      <file>tests/VALUE_Test.php</file>
     </testsuite>
   </testsuites>
 </phpunit>

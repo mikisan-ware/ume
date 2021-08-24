@@ -32,7 +32,7 @@ class UMESettings
                 "type"      => UME::TYPE_STRING,
                 "correct"   => function($value):string  { return mb_convert_kana($value, "n", self::ENCODE); },      // n:「全角」数字を「半角」に変換します。
                 "rule"      => function($value):bool    { return ctype_digit($value); },
-                "error"     => function($label, $conditions):string { return "[{$label}] には数字以外が含まれています。"; }
+                "error"     => function($label, $conditions):string { return "[{$label}] には半角数字以外が含まれています。"; }
             ],
             // alphabet 全てアルファベットか？
             "alphabet" => [

@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace mikisan\core\basis\ume;
 
 use \mikisan\core\basis\ume\UME;
+use \mikisan\core\util\ex\EX;
 use \mikisan\core\util\str\STR;
 
 class VALUE
@@ -23,13 +24,12 @@ class VALUE
      * 
      * @param   UME         $ume
      * @param   mixed       $value
-     * @param   string      $type
      * @param   string      $key
      * @param   array       $conditions
      * @param   \stdClass   $response
      * @return  mixed
      */
-    public static function validate(UME $ume, $value, string $type, string $key, array $conditions, \stdClass $response)
+    public static function validate(UME $ume, $value, string $key, array $conditions, \stdClass $response)
     {
         // エンコード矯正
         if(is_string($value))
@@ -38,22 +38,25 @@ class VALUE
         }
         
         // 事前処理：事前フィルタ適用、オートコレクト、NULLバイト除去、トリム
-        $value  = self::prepare($ume, $value, $type, $conditions);
+        $value  = self::prepare($ume, $value, $conditions);
         
         // バリデーション処理
         if(REQUIREMENT::should_validate($ume, $value, $key, $conditions, $response))
         {
             // バリデーション処理
-            VALIDATOR::do($ume, $value, $key, $conditions, $response);
+            $result = VALIDATOR::do($ume, $value, $key, $conditions, $response);
             
-            // 値確定処理：タイプキャスト、事後フィルタ
-            $value  = self::conclude($ume, $value, $type, $conditions);
-            
-            // 許容範囲チェック
-            $is_in_range    = (isset($conditions["choice"]))
-                                    ? CHOICE::isInListValue($ume, $value, $key, $condition, $response)
-                                    : RANGE ::isInRange($ume, $value, $key, $condition, $response)
-                                    ;
+            if($result)
+            {
+                // 値確定処理：タイプキャスト、事後フィルタ
+                $value  = self::conclude($ume, $value, $conditions);
+
+                // 許容範囲チェック
+                $is_in_range    = (isset($conditions["choice"]))
+                                        ? CHOICE::isInListValue ($ume, $value, $key, $conditions, $response)
+                                        : RANGE ::isInRange     ($ume, $value, $key, $conditions, $response)
+                                        ;
+            }
         }
         
         return $value;
@@ -64,24 +67,26 @@ class VALUE
      * 
      * @param   UME     $ume
      * @param   mixed   $value
-     * @param   string  $type
      * @param   array   $conditions
      * @return  mixed
      */
-    private static function prepare(UME $ume, $value, string $type, array $conditions)
+    private static function prepare(UME $ume, $value, array $conditions)
     {
         // 事前フィルタ
         if(!EX::empty($conditions["filter"]))       { $value = FILTER::do($ume->get_filters(), $value, $conditions); }
         
         // オートコレクト
-        if($conditions["auto_correct"] === true)    { $value = CORRECTOR::do($ume->get_types()[$type], $value, $conditions); }
+        if($conditions["auto_correct"] === true)    { $value = CORRECTOR::do($ume->get_types()[$conditions["type"]], $value, $conditions); }
         
-        // NULLバイト除去
-        if($conditions["null_byte"] === false)      { $value = STR::strip_null($value); }
+        if(is_string($value))
+        { 
+            // NULLバイト除去
+            if($conditions["null_byte"] === false)  { $value = STR::strip_null($value); }
         
-        // トリム
-        $value = TRIM::do($value, $conditions);
-        
+            // トリム
+            $value = TRIM::do($value, $conditions);
+        }
+    
         return $value;
     }
     
@@ -94,12 +99,12 @@ class VALUE
      * @param   array   $conditions
      * @return  mixed
      */
-    private static function conclude(UME $ume, $value, string $type, array $conditions)
+    private static function conclude(UME $ume, $value, array $conditions)
     {
         if(is_null($value)) { return null; }
 
         // タイプキャスト
-        $value  = TYPECAST::do($ume->get_types()["type"], $value);
+        $value  = TYPECAST::do($ume->get_types()[$conditions["type"]]["type"], $value);
 
         // 事後フィルタ
         $value  = CLOSER::do($ume->get_closers(), $value, $conditions);

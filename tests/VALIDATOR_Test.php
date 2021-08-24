@@ -61,14 +61,14 @@ class VALIDATOR_Test extends TestCase
         $expect = "あいうえおー漢字－1234567890ＡＢＣＤＥＦＧｈｉｊｋｌｍｎ<script>alert(\"XSS!\");@＠ABC12345=！＃＄％＆（）－＝「」＊!#$%&()=[]*";
         $result = VALIDATOR::do($this->ume, $value, $key, $conditions, $this->response);
         $this->assertSame(false, $result);
-        $this->assertSame("[テスト] には数字以外が含まれています。{$this->response->index}", $this->response->VE["test"]);
+        $this->assertSame("[テスト] には半角数字以外が含まれています。{$this->response->index}", $this->response->VE["test"]);
         //
         $failcases  = ["１２３４５６７８９０", "-1234567890", "1,234,567,890", "1234-567890", "Ā", "ɑ", "#", "@", "Ⅲ", "⑤", "七"];
         foreach($failcases as $value)
         {
             $result = VALIDATOR::do($this->ume, $value, $key, $conditions, $this->response);
             $this->assertSame(false, $result);
-            $this->assertSame("[テスト] には数字以外が含まれています。{$this->response->index}", $this->response->VE["test"]);
+            $this->assertSame("[テスト] には半角数字以外が含まれています。{$this->response->index}", $this->response->VE["test"]);
         }
     }
     

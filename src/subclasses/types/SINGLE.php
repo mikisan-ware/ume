@@ -30,10 +30,8 @@ class SINGLE
      * @return  void
      * @throws  UMEException
      */
-    public static function validate(UME $ume, $src, string $type, string $key, array $conditions, \stdClass $response)
+    public static function validate(UME $ume, $src, string $key, array $conditions, \stdClass $response)
     {
-        $response->index    = "";
-        
         // バリデート
         switch(true)
         {
@@ -56,7 +54,7 @@ class SINGLE
 
             default:
                 
-                $value  = VALUE::validate($ume, $value, $type, $key, $conditions, $response);
+                $value  = VALUE::validate($ume, $value, $key, $conditions, $response);
         }
         
         return $value;

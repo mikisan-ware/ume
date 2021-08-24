@@ -219,6 +219,7 @@ abstract class BaseUME implements UME
     {
         $response               = new \stdClass();
         $response->has_error    = false;
+        $response->index        = "";
         $response->VE           = [];
         $response->src          = [];
         $response->dist         = [];
@@ -241,12 +242,12 @@ abstract class BaseUME implements UME
                 
                 case preg_match("|\A.+\[\]\z|u", $key):
                     
-                    $value  = MULTIPLE::validate($this, $src, $type, $key, $conditions, $response);     // 配列項目のバリデート
+                    $value  = MULTIPLE::validate($this, $src, $key, $conditions, $response);     // 配列項目のバリデート
                     break;
                     
                 default:
                     
-                    $value  = SINGLE::validate($this, $src, $type, $key, $conditions, $response);       // 単一項目のバリデート
+                    $value  = SINGLE::validate($this, $src, $key, $conditions, $response);       // 単一項目のバリデート
             }
             
             $response->dest["key"]  = $values;

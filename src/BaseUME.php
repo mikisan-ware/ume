@@ -27,9 +27,10 @@ interface UME
     
     const   GET = "GET", POST = "POST", DELETE = "DELETE", PUT = "PUT", PATCH = "PATCH"; 
     const   OPTIONS = "OPTIONS", HEAD = "HEAD", LINK = "LINK", ULINK = "ULINK", TRACE = "TRACE";
-    const   RESTful = "RESTFUL", ARGS = "ARGS", DATASET = "DATASET";
+    const   RESTful = "RESTFUL", REST = self::RESTful;
+    const   ARGS = "ARGS", DATASET = "DATASET";
     
-    const   REQUEST = "REQUEST", COOKIE = "COOKIE", FILES = "FILES";
+    const   REQUEST = "REQUEST", COOKIE = "COOKIE", FILES = "FILES", FILE = self::FILES;
     
     const   TYPE_STRING = 0, TYPE_INTEGER = 1, TYPE_REAL = 2, TYPE_FILE = 3;
 }

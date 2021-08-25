@@ -184,7 +184,7 @@ class CHOICE_Test extends TestCase
             "auto_correct" => true, "filter" => "base64", "trim" => UME::TRIM_ALL, "null_byte" => false,
             "method" => UME::GET, "require" => false
         ];
-        $value = array();
+        $value                  = [];
         $value["name"]          = "ファイルアップロードテスト.png";
         $value["type"]          = "image/png";
         $value["real_type"]     = "image/png";
@@ -210,7 +210,7 @@ class CHOICE_Test extends TestCase
             "auto_correct" => true, "filter" => "base64", "trim" => UME::TRIM_ALL, "null_byte" => false,
             "method" => UME::FILES, "require" => false
         ];
-        $value = array();
+        $value                  = [];
         $value["name"]          = "ファイルアップロードテスト.txt";
         $value["type"]          = "text/plain";
         $value["real_type"]     = "text/plain";
@@ -240,7 +240,7 @@ class CHOICE_Test extends TestCase
             "auto_correct" => true, "filter" => "base64", "trim" => UME::TRIM_ALL, "null_byte" => false,
             "method" => UME::FILES, "require" => false
         ];
-        $value = array();
+        $value                  = [];
         $value["name"]          = "ファイルアップロードテスト.txt";
         $value["type"]          = "text/plain";
         $value["real_type"]     = "text/plain";

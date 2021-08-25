@@ -13,6 +13,8 @@ declare(strict_types=1);
 namespace mikisan\core\basis\ume;
 
 use \mikisan\core\basis\ume\UME;
+use \mikisan\core\exception\UMEException;
+use \mikisan\core\util\ex\EX;
 
 class FILE
 {
@@ -79,13 +81,17 @@ class FILE
         {
             throw new UMEException("アップロードされたファイルのファイル名が空です。[{$label}]");
         }
-        if(preg_match("|(\A\.|\.\z)|u", $value["name"]))
+        if(preg_match("|\A\.|u", $value["name"]) || preg_match("|\.\z|u", $value["name"]) )
         {
             throw new UMEException("先頭または末尾が . の名前のファイルのアップロードは許可されていません。[{$label}]");
         }
-        if(preg_match("|\A\.|u", $value["name"]))
+        if(preg_match("|/|u", $value["name"]))
         {
-            throw new UMEException("/ を含む名前のファイルのアップロードは許可されていません。[{$label}]");
+            throw new UMEException("ファイル名に / を含むファイルのアップロードは許可されていません。[{$label}]");
+        }
+        if(preg_match("|\\\\|u", $value["name"]))
+        {
+            throw new UMEException("ファイル名に \\ を含むファイルのアップロードは許可されていません。[{$label}]");
         }
         
         return true;

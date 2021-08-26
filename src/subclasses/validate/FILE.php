@@ -30,15 +30,25 @@ class FILE
      * @param   \stdClass   $response
      * @return  array
      */
-    public static function validate(UME $ume, array $file, string $type, string $key, array $conditions, \stdClass $response): array
+    public static function validate(UME $ume, array $file, string $key, array $conditions, \stdClass $response): array
     {
         // アップロードファイルのセキュリティチェック
         self::filecheck($ume, $file, $key);
         
         // 拡張子チェック
-        CHOICE::isInListFileType($ume, $file, $key, $condition, $response);
-        
+        $is_in_range    = (isset($conditions["choice"]))
+                                ? CHOICE::isInListFileType($ume, $file, $key, $conditions, $response)
+                                : self::filetype_undefineded($ume, $file, $key)
+                                ;
         return $file;
+    }
+    
+    private static function filetype_undefineded(UME $ume, $value, string $key): void
+    {
+        $labels     = $ume->get_labels();
+        $label      = $labels["ja_JP"][$key] ?? $key;
+        
+        throw new UMEException("[{$label}] でアップロード可能なファイル形式（拡張子）を choice で指定してください。");
     }
     
     private static function filecheck(UME $ume, $value, string $key): bool
@@ -71,7 +81,7 @@ class FILE
         }
         
         // 正規にアップロードされたファイルか？
-        if(!defined("DEBUG") && !is_uploaded_file($value["tmp_name"]))
+        if(!defined("LIBRARY_DEBUG") && !is_uploaded_file($value["tmp_name"]))
         {
             throw new UMEException("[{$label}] は正規のアップロードファイルではありません。");
         }

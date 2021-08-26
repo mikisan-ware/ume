@@ -18,6 +18,8 @@ use \mikisan\core\basis\ume\NORMALIZE;
 
 interface UME
 {
+    const   FETCH_NORMAL = 0, FETCH_DATASET = 1;
+    
     const   TRIM_N = false, TRIM_NONE = false, 
             TRIM_L = 1, TRIM_LEFT = 1,
             TRIM_R = 2, TRIM_RIGHT = 2, 
@@ -38,12 +40,13 @@ interface UME
 abstract class BaseUME implements UME
 {
     
-    protected $types    = [];
-    protected $filters  = [];
-    protected $closers  = [];
-    protected $rules    = [];
-    protected $labels   = [];
-    protected $dataset  = null;
+    protected $types        = [];
+    protected $filters      = [];
+    protected $closers      = [];
+    protected $rules        = [];
+    protected $labels       = [];
+    protected $fetch_mode   = UME::FETCH_NORMAL;
+    protected $dataset      = null;
     protected $from_encoding    = "UTF-8";
     
     // バリデーション定義で許可されている連想配列キー
@@ -180,15 +183,16 @@ abstract class BaseUME implements UME
      * @param   array   $dataset
      * @return  \mikisan\core\basis\ume\UME
      */
-    protected function register_dataset(array $dataset): UME
+    public function register_dataset(array $dataset): UME
     {
-        if(!is_array($src))
+        if(!is_array($dataset))
         {
             $data_type  = gettype($dataset);
             throw new UMEException("UME::register_dataset() に渡された入力値が配列ではありません。[type: {$data_type}]");
         }
         
-        $this->dataset  = $dataset;
+        $this->fetch_mode   = UME::FETCH_DATASET;
+        $this->dataset      = $dataset;
         
         return $this;
     }
@@ -216,7 +220,7 @@ abstract class BaseUME implements UME
         }
     }
     
-    public function validate(Dto $dto): UME
+    private function get_response(): \stdClass
     {
         $response               = new \stdClass();
         $response->has_error    = false;
@@ -225,33 +229,95 @@ abstract class BaseUME implements UME
         $response->src          = [];
         $response->dist         = [];
         
+        return $response;
+    }
+    
+    public function validate(Dto $dto): UME
+    {
+        ($this->fetch_mode === UME::FETCH_DATASET)
+                    ? $this->fetch_dataset()
+                    : $this->fetch_normal()
+                    ;
+    }
+    
+    /**
+     * データセットのバリデーション
+     * 
+     * @param   \stdClass   $response
+     */
+    private function fetch_dataset()
+    {
+        $response_set   = $this->get_response();
+        
+        $i = 0;
+        foreach($this->get_dataset() as $row)
+        {
+            $response   = $this->get_response();
+            $i++;
+            foreach($this->rules as $key => $conditions)
+            {
+                // バリデートコンディションの正規化
+                $conditions             = $this->normarize_condition($conditions);
+
+                // バリデーション
+                $response->dist[$key]   = $this->validate_individual($row[$key], $key, $conditions, $response);
+            }
+            
+            // バリデーション情報の統合
+            $response_set->has_error    = $response->has_error;
+            $response_set->VE[$i]       = $response->VE;
+            $response_set->src[$i]      = $response->src;
+            $response_set->dist[$i]     = $response->dist;
+        }
+    }
+    
+    /**
+     * 通常リクエストデータのバリデーション
+     * 
+     * @param \stdClass $response
+     */
+    private function fetch_normal()
+    {
+        $response   = $this->get_response();
+        
         foreach($this->rules as $key => $conditions)
         {
             // リクエスト取得
-            $src    = DATASOURCE::get($ume, $conditions["method"], $key);
-            $response->src["key"]   = $src;
+            $src                    = DATASOURCE::get($ume, $conditions["method"], $key);
+            $response->src[$key]    = $src;
             
             // バリデートコンディションの正規化
-            $conditions = self::normarize_condition($conditions);
+            $conditions             = $this->normarize_condition($conditions);
             
-            switch(true)
-            {
-                case preg_match("|\A([^%]+)_(%_)*%(\[\])?\z|u", $key):
-                    
-                    $value  = HIERARCHY::validate($this, $type, $key, $conditions, $response);    // 階層連番項目のバリデート
-                    break;
-                
-                case preg_match("|\A.+\[\]\z|u", $key):
-                    
-                    $value  = MULTIPLE::validate($this, $src, $key, $conditions, $response);     // 配列項目のバリデート
-                    break;
-                    
-                default:
-                    
-                    $value  = SINGLE::validate($this, $src, $key, $conditions, $response);       // 単一項目のバリデート
-            }
-            
-            $response->dest["key"]  = $values;
+            // バリデーション
+            $response->dist[$key]   = $this->validate_individual($src, $key, $conditions, $response);
+        }
+    }
+    
+    /**
+     * 単一項目ごとのバリデーション
+     * 
+     * @param   mixed       $src
+     * @param   mixed       $key            string|index
+     * @param   array       $conditions
+     * @param   \stdClass   $response
+     * @return  mixed
+     */
+    private function validate_individual($src, $key, array $conditions, \stdClass $response)
+    {
+        switch(true)
+        {
+            case preg_match("|\A([^%]+)_(%_)*%(\[\])?\z|u", $key):
+
+                return HIERARCHY::validate($this, $type, $key, $conditions, $response);     // 階層連番項目のバリデート
+
+            case preg_match("|\A.+\[\]\z|u", $key):
+
+                return MULTIPLE::validate($this, $src, $key, $conditions, $response);       // 配列項目のバリデート
+
+            default:
+
+                return SINGLE::validate($this, $src, $key, $conditions, $response);         // 単一項目のバリデート
         }
     }
     
@@ -264,6 +330,7 @@ abstract class BaseUME implements UME
         $conditions["null_byte"]        = $conditions["null_byte"]      ?? false;
         $conditions["method"]           = $conditions["method"]         ?? UMESetting::DEFAULT_METHOD;
         $conditions["require"]          = $conditions["type"]           ?? UMESetting::DEFAULT_REQUIRE;
+        
         return $conditions;
     }
     

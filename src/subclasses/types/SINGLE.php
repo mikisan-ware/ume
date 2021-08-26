@@ -27,7 +27,7 @@ class SINGLE
      * @param   string      $key
      * @param   array       $conditions
      * @param   \stdClass   $response
-     * @return  void
+     * @return  mixed
      * @throws  UMEException
      */
     public static function validate(UME $ume, $src, string $key, array $conditions, \stdClass $response)
@@ -37,27 +37,26 @@ class SINGLE
         {
             case $conditions["method"] === UME::FILES:
                 
-                $value  = FILE ::validate($ume, $src, $type, $key, $conditions, $response);
-                
+                return  FILE ::validate($ume, $src, $key, $conditions, $response);
+            
+            /*
             case $conditions["method"] === UME::DATASET:
                 
                 $value  = $src;
-                
-                $i  = 0;
+                $i      = 0;
                 foreach($value as &$data)
                 {
                     $i++;
                     $response->index    = "[データ番号: {$i}]";
-                    $data[$key] = VALUE::validate($ume, $data[$key], $type, $key, $conditions, $response);
+                    $data[$key] = VALUE::validate($ume, $data[$key], $key, $conditions, $response);
                 }
                 unset($data);
-
+            */
+                
             default:
                 
-                $value  = VALUE::validate($ume, $value, $key, $conditions, $response);
+                return  VALUE::validate($ume, $src, $key, $conditions, $response);
         }
-        
-        return $value;
     }
     
 }

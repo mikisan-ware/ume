@@ -25,7 +25,7 @@ require_once "{$project_root}/tests/TestCaseTrait.php";
 Autoload::register(__DIR__ . "/../src", true);
 Autoload::register(__DIR__ . "/folder", true);
 
-define("DEBUG", true);
+define("LIBRARY_DEBUG", true);
 
 class FILE_Test extends TestCase
 {
@@ -49,6 +49,79 @@ class FILE_Test extends TestCase
         $response->src          = [];
         $response->dist         = [];
         return $response;
+    }
+    
+    public function test_validate()
+    {
+        $key        = "test";
+        $conditions = [
+            "type" => "file", "min" => PHP_INT_MIN, "max" => PHP_INT_MAX, "choice" => "txt",
+            "auto_correct" => true, "filter" => null, "trim" => UME::TRIM_ALL, "null_byte" => false,
+            "method" => UME::FILES, "require" => true
+        ];
+        $type       = $conditions["type"];
+        $response   = $this->get_response();
+        $value                  = [];
+        $value["name"]          = "ファイルアップロードテスト.txt";
+        $value["type"]          = "text/plain";
+        $value["real_type"]     = "text/plain";
+        $value["tmp_name"]      = __DIR__ . "/folder/upload_test_file.txt";
+        $value["error"]         = 0;
+        $value["size"]          = 1978;
+        //
+        $file = FILE::validate($this->ume, $value, $key, $conditions, $response);
+        $this->assertSame(false, $response->has_error);
+    }
+    
+    public function test_validate_unallowed()
+    {
+        $key        = "test";
+        $conditions = [
+            "type" => "file", "min" => PHP_INT_MIN, "max" => PHP_INT_MAX, "choice" => "txt",
+            "auto_correct" => true, "filter" => null, "trim" => UME::TRIM_ALL, "null_byte" => false,
+            "method" => UME::FILES, "require" => true
+        ];
+        $type       = $conditions["type"];
+        $response   = $this->get_response();
+        $value                  = [];
+        $value["name"]          = "ファイルアップロードテスト.jpg";
+        $value["type"]          = "image/jpeg";
+        $value["real_type"]     = "image/jpeg";
+        $value["tmp_name"]      = __DIR__ . "/folder/upload_test_file.jpg";
+        $value["error"]         = 0;
+        $value["size"]          = 17498;
+        $labels     = $this->ume->get_labels();
+        $label      = $labels["ja_JP"][$key] ?? $key;
+        $note           = $conditions["choice"];
+        //
+        $file = FILE::validate($this->ume, $value, $key, $conditions, $response);
+        $this->assertSame("[{$label}] のファイルタイプは許可されていません。（許容値：{$note}）", $response->VE[$key]);
+        $this->assertSame(true, $response->has_error);
+    }
+    
+    public function test_validate_choice_undefined()
+    {
+        $key        = "test";
+        $conditions = [
+            "type" => "file", "min" => PHP_INT_MIN, "max" => PHP_INT_MAX,
+            "auto_correct" => true, "filter" => null, "trim" => UME::TRIM_ALL, "null_byte" => false,
+            "method" => UME::FILES, "require" => true
+        ];
+        $type       = $conditions["type"];
+        $response   = $this->get_response();
+        $value                  = [];
+        $value["name"]          = "ファイルアップロードテスト.txt";
+        $value["type"]          = "text/plain";
+        $value["real_type"]     = "text/plain";
+        $value["tmp_name"]      = __DIR__ . "/folder/upload_test_file.txt";
+        $value["error"]         = 0;
+        $value["size"]          = 1978;
+        $labels     = $this->ume->get_labels();
+        $label      = $labels["ja_JP"][$key] ?? $key;
+        //
+        $this->expectException(UMEException::class);
+        $this->expectExceptionMessage("[{$label}] でアップロード可能なファイル形式（拡張子）を choice で指定してください。");
+        $file = FILE::validate($this->ume, $value, $key, $conditions, $response);
     }
     
     public function test_filecheck()

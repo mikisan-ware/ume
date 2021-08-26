@@ -33,7 +33,7 @@ class DATASOURCE
             case $method === UME::COOKIE:   return $_COOKIE[$key]       ?? null;
             case $method === UME::RESTful:  return Router::route()->params[$key]    ?? null;
             case $method === UME::ARGS:     return Router::route()->args[$key]      ?? null;
-            case $method === UME::DATASET:  return $ume->get_dataset()  ?? null;
+            //case $method === UME::DATASET:  return $ume->get_dataset()  ?? null;
                 
             case $method === UME::HEAD:
             case $method === UME::OPTIONS:

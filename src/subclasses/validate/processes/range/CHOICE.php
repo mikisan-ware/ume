@@ -33,7 +33,7 @@ class CHOICE
      */
     public static function isInListValue(UME $ume, $value, string $key, array $conditions, \stdClass $response): bool
     {
-        $labels     = $ume->get_labels();
+        $labels     = $ume->getLabels();
         $label      = $labels["ja_JP"][$key] ?? $key;
         $allowed    = self::get_allowed($conditions["choice"], $label);
         
@@ -42,6 +42,7 @@ class CHOICE
         $note       = implode("|", $allowed);
         $response->VE[$key]     = "[{$label}] の値は許可されていません。（許容値：{$note}）";
         $response->has_error    = true;
+        $response->on_error     = true;
         
         return false;
     }
@@ -59,7 +60,7 @@ class CHOICE
      */
     public static function isInListFileType(UME $ume, $value, string $key, array $conditions, \stdClass $response): bool
     {
-        $labels     = $ume->get_labels();
+        $labels     = $ume->getLabels();
         $label      = $labels["ja_JP"][$key] ?? $key;
         
         if(!isset($conditions["choice"]))
@@ -77,6 +78,7 @@ class CHOICE
         $note       = implode("|", $allowed);
         $response->VE[$key]     = "[{$label}] のファイルタイプは許可されていません。（許容値：{$note}）";
         $response->has_error    = true;
+        $response->on_error     = true;
         
         return false;
     }

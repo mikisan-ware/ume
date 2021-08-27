@@ -45,7 +45,7 @@ class FILE
     
     private static function filetype_undefineded(UME $ume, $value, string $key): void
     {
-        $labels     = $ume->get_labels();
+        $labels     = $ume->getLabels();
         $label      = $labels["ja_JP"][$key] ?? $key;
         
         throw new UMEException("[{$label}] でアップロード可能なファイル形式（拡張子）を choice で指定してください。");
@@ -53,7 +53,7 @@ class FILE
     
     private static function filecheck(UME $ume, $value, string $key): bool
     {
-        $labels     = $ume->get_labels();
+        $labels     = $ume->getLabels();
         $label      = $labels["ja_JP"][$key] ?? $key;
         
         // 正常にアップロードされたか？

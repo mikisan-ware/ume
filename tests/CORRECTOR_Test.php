@@ -34,7 +34,7 @@ class CORRECTOR_Test extends TestCase
     public function setUp(): void
     {
         $ume            = new ChildUME();
-        $this->types    = $ume->get_types();
+        $this->types    = $ume->getTypes();
     }
     
     /**

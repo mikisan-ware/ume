@@ -33,7 +33,7 @@ class CLOSER_Test extends TestCase
     public function setUp(): void
     {
         $ume            = new ChildUME();
-        $this->closers  = $ume->get_closers();
+        $this->closers  = $ume->getClosers();
     }
     
     /**

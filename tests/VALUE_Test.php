@@ -40,6 +40,7 @@ class VALUE_Test extends TestCase
     {
         $response               = new \stdClass();
         $response->has_error    = false;
+        $response->on_error     = false;
         $response->index        = "[要素: ".rand(1,100)."]";
         $response->VE           = [];
         $response->src          = [];
@@ -101,7 +102,7 @@ class VALUE_Test extends TestCase
         //
         $value      = "あいうえ";
         $result     = VALUE::validate($this->ume, $value, $key, $conditions, $response);
-        $this->assertSame($value, $result);
+        $this->assertSame(null, $result);
     }
     
     
@@ -121,7 +122,7 @@ class VALUE_Test extends TestCase
         //
         $value      = "さしす";
         $result     = VALUE::validate($this->ume, $value, $key, $conditions, $response);
-        $this->assertSame($value, $result);
+        $this->assertSame(null, $result);
     }
     
     /**
@@ -197,8 +198,8 @@ class VALUE_Test extends TestCase
         //
         $value      = "１２３123";
         $result     = VALUE::validate($this->ume, $value, $key, $conditions, $response);
-        $this->assertSame($value, $result);
-        $this->assertSame("[テスト] は整数でなければなりません。{$response->index}", $response->VE["test"]);
+        $this->assertSame(null, $result);
+        $this->assertSame("[テスト] は整数でなければなりません。", $response->VE["test"]);
     }
     
     public function test_do_validate_int_choice()
@@ -253,8 +254,8 @@ class VALUE_Test extends TestCase
         //
         $value      = "１２３123";
         $result     = VALUE::validate($this->ume, $value, $key, $conditions, $response);
-        $this->assertSame($value, $result);
-        $this->assertSame("[テスト] には半角数字以外が含まれています。{$response->index}", $response->VE["test"]);
+        $this->assertSame(null, $result);
+        $this->assertSame("[テスト] には半角数字以外が含まれています。", $response->VE["test"]);
     }
     
     public function test_do_validate_digit_choice()

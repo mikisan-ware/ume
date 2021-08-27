@@ -58,12 +58,13 @@ class REQUIREMENT
      * @param \stdClass $response
      * @return bool
      */
-    private static function fail(UME $ume, string $key, \stdClass $response): bool
+    public static function fail(UME $ume, string $key, \stdClass $response): bool
     {
-        $labels = $ume->get_labels();
+        $labels = $ume->getLabels();
         $label  = $labels["ja_JP"][$key] ?? $key;
-        $response->VE[$key]     = "[$label] は必須項目です。" . $response->index;
+        $response->VE[$key]     = "[$label] は必須項目です。";
         $response->has_error    = true;
+        $response->on_error     = true;
 
         return false;
     }

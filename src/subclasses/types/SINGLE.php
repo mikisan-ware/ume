@@ -13,7 +13,6 @@ declare(strict_types=1);
 namespace mikisan\core\basis\ume;
 
 use \mikisan\core\basis\ume\UME;
-use \mikisan\core\basis\ume\DATASOURCE;
 
 class SINGLE
 {
@@ -32,31 +31,13 @@ class SINGLE
      */
     public static function validate(UME $ume, $src, string $key, array $conditions, \stdClass $response)
     {
+        $response->on_error     = false;
+        
         // バリデート
-        switch(true)
-        {
-            case $conditions["method"] === UME::FILES:
-                
-                return  FILE ::validate($ume, $src, $key, $conditions, $response);
-            
-            /*
-            case $conditions["method"] === UME::DATASET:
-                
-                $value  = $src;
-                $i      = 0;
-                foreach($value as &$data)
-                {
-                    $i++;
-                    $response->index    = "[データ番号: {$i}]";
-                    $data[$key] = VALUE::validate($ume, $data[$key], $key, $conditions, $response);
-                }
-                unset($data);
-            */
-                
-            default:
-                
-                return  VALUE::validate($ume, $src, $key, $conditions, $response);
-        }
+        return ($conditions["method"] === UME::FILES)
+                    ? FILE ::validate($ume, $src, $key, $conditions, $response)
+                    : VALUE::validate($ume, $src, $key, $conditions, $response)
+                    ;
     }
     
 }

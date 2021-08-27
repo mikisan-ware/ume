@@ -35,11 +35,14 @@ interface UME
     const   REQUEST = "REQUEST", COOKIE = "COOKIE", FILES = "FILES", FILE = self::FILES;
     
     const   TYPE_STRING = 0, TYPE_INTEGER = 1, TYPE_REAL = 2, TYPE_FILE = 3;
+    
+    const   DATA_SIMPLE = 0, DATA_MULTI = 1;
 }
 
 abstract class BaseUME implements UME
 {
     
+    protected $result       = null;
     protected $types        = [];
     protected $filters      = [];
     protected $closers      = [];
@@ -50,7 +53,10 @@ abstract class BaseUME implements UME
     protected $from_encoding    = "UTF-8";
     
     // バリデーション定義で許可されている連想配列キー
-    private $allowed_keys   = ["name", "type", "min", "max", "choice", "auto_correct", "filter", "trim", "null_byte", "method", "index", "require"];
+    private $allowed_keys   = [
+                                "name", "type", "min", "max", "choice", "auto_correct", 
+                                "filter", "closer", "trim", "null_byte", "method", "require"
+                            ];
     
     public function __construct()
     {
@@ -66,14 +72,10 @@ abstract class BaseUME implements UME
         // バリデーションルールの登録
         if(method_exists($this, "rules"))
         {
-            foreach($this->rules() as $condition)
+            foreach($this->rules() as $rule => $conditions)
             {
-                if(!isset($this->types[$condition["type"]]))
-                {
-                    throw new UMEException("バリデーションタイプ [{$condition["type"]}] は定義されていません。");
-                }
+                $this->check_condition($rule, $conditions);
             }
-            
             $this->register_rules($this->rules());
         }
         
@@ -84,9 +86,32 @@ abstract class BaseUME implements UME
         }
     }
     
-    public function set_from_encoding($value): void { $this->from_encoding = $value; }
-    public function get_from_encoding(): string     { return $this->from_encoding; }
+    /**
+     * $conditionsに、許可されていないキーが使用されている場合はExceptionを投げる
+     * 
+     * @param   array           $conditions
+     * @throws  UMEException
+     */
+    private function check_condition(string $rule, array $conditions)
+    {
+        foreach($conditions as $key => $value)
+        {
+            if(!in_array($key, $this->allowed_keys, true))
+            {
+                throw new UMEException("バリデーションルール {$rule} の設定に、許可されていないキー {$key} が使用されています。");
+            }
+        }
+    }
     
+    public function setFromEncoding($value): UME
+    {
+        $this->from_encoding = $value;
+        return $this;
+    }
+    public function getFromEncoding(): string       { return $this->from_encoding; }
+    
+    public function getResult(): \stdClass          { return $this->result; }
+        
     /**
      * デフォルトバリデーション定義の登録・ゲッター
      * 
@@ -100,7 +125,7 @@ abstract class BaseUME implements UME
         return $this;
     }
     
-    public function get_types(): array
+    public function getTypes(): array
     {
         return $this->types;
     }
@@ -118,7 +143,7 @@ abstract class BaseUME implements UME
         return $this;
     }
     
-    public function get_filters(): array
+    public function getFilters(): array
     {
         return $this->filters;
     }
@@ -136,7 +161,7 @@ abstract class BaseUME implements UME
         return $this;
     }
     
-    public function get_closers(): array
+    public function getClosers(): array
     {
         return $this->closers;
     }
@@ -154,7 +179,7 @@ abstract class BaseUME implements UME
         return $this;
     }
     
-    public function get_rules(): array
+    public function getRules(): array
     {
         return $this->rules;
     }
@@ -172,7 +197,7 @@ abstract class BaseUME implements UME
         return $this;
     }
     
-    public function get_labels(): array
+    public function getLabels(): array
     {
         return $this->labels;
     }
@@ -183,12 +208,12 @@ abstract class BaseUME implements UME
      * @param   array   $dataset
      * @return  \mikisan\core\basis\ume\UME
      */
-    public function register_dataset(array $dataset): UME
+    public function dataset($dataset): UME
     {
         if(!is_array($dataset))
         {
             $data_type  = gettype($dataset);
-            throw new UMEException("UME::register_dataset() に渡された入力値が配列ではありません。[type: {$data_type}]");
+            throw new UMEException("UME::dataset() に渡された入力値が配列ではありません。[type: {$data_type}]");
         }
         
         $this->fetch_mode   = UME::FETCH_DATASET;
@@ -197,47 +222,58 @@ abstract class BaseUME implements UME
         return $this;
     }
     
-    public function get_dataset(): array
+    public function getDataset(): array
     {
         return $this->dataset;
     }
     
-    
-    /**
-     * $conditionsに、許可されていないキーが使用されている場合はExceptionを投げる
-     * 
-     * @param   array           $conditions
-     * @throws  UMEException
-     */
-    private function validate_condition(string $rule, array $conditions)
+    private function get_response_set(int $type = UME::DATA_SIMPLE): \stdClass
     {
-        foreach($conditions as $key => $value)
-        {
-            if(!in_array($key, self::$allowed_keys, true))
-            {
-                throw new UMEException("バリデーションルール {$rule} の設定に、許可されていないキー {$key} が使用されています。");
-            }
-        }
+        $response               = new \stdClass();
+        $response->type         = $type;
+        $response->has_error    = false;
+        $response->info         = [];
+        $response->data         = [];
+        
+        return $response;
     }
     
     private function get_response(): \stdClass
     {
         $response               = new \stdClass();
         $response->has_error    = false;
-        $response->index        = "";
+        $response->on_error     = false;
         $response->VE           = [];
+        $response->offset       = [];
         $response->src          = [];
         $response->dist         = [];
         
         return $response;
     }
     
-    public function validate(Dto $dto): UME
+    public function validate(): UME
     {
-        ($this->fetch_mode === UME::FETCH_DATASET)
-                    ? $this->fetch_dataset()
-                    : $this->fetch_normal()
-                    ;
+        $this->result   =($this->fetch_mode === UME::FETCH_DATASET)
+                                ? $this->fetch_dataset()
+                                : $this->fetch_normal()
+                                ;
+        return $this;
+    }
+    
+    /**
+     * エンコード補正
+     * 
+     * @param   mixed   $temp
+     * @return  mixed
+     */
+    private function unify_encoding($temp)
+    { 
+        if(!is_string($temp))   { return $temp; }
+        
+        return (UMESettings::ENCODE !== $this->getFromEncoding())
+                        ? mb_convert_encoding($temp, UMESettings::ENCODE, $this->getFromEncoding())
+                        : $temp
+                        ;
     }
     
     /**
@@ -247,28 +283,39 @@ abstract class BaseUME implements UME
      */
     private function fetch_dataset()
     {
-        $response_set   = $this->get_response();
+        $response_set   = $this->get_response_set(UME::DATA_MULTI);
         
         $i = 0;
-        foreach($this->get_dataset() as $row)
+        foreach($this->dataset as $row)
         {
             $response   = $this->get_response();
-            $i++;
             foreach($this->rules as $key => $conditions)
             {
+                $response->src[$key]    = $row[$key];
+                
                 // バリデートコンディションの正規化
                 $conditions             = $this->normarize_condition($conditions);
-
+                
+                // エンコード補正
+                $src                    = $this->unify_encoding($row[$key]);
+                
                 // バリデーション
-                $response->dist[$key]   = $this->validate_individual($row[$key], $key, $conditions, $response);
+                $response->dist[$key]   = $this->validate_individual($src, $key, $conditions, $response);
             }
             
             // バリデーション情報の統合
-            $response_set->has_error    = $response->has_error;
-            $response_set->VE[$i]       = $response->VE;
-            $response_set->src[$i]      = $response->src;
-            $response_set->dist[$i]     = $response->dist;
+            if($response->has_error)    { $response_set->has_error = true; }
+            $response_set->info[$i]             = new \stdClass();
+            $response_set->info[$i]->has_error  = $response->has_error;
+            $response_set->info[$i]->error      = $response->VE;
+            $response_set->info[$i]->offset     = $response->offset;
+            $response_set->info[$i]->src        = $response->src;
+            $response_set->data[$i]             = $response->dist;
+            
+            $i++;
         }
+        
+        return $response_set;
     }
     
     /**
@@ -278,27 +325,42 @@ abstract class BaseUME implements UME
      */
     private function fetch_normal()
     {
-        $response   = $this->get_response();
+        $response_set   = $this->get_response_set(UME::DATA_SIMPLE);
+        $response       = $this->get_response();
         
         foreach($this->rules as $key => $conditions)
         {
             // リクエスト取得
-            $src                    = DATASOURCE::get($ume, $conditions["method"], $key);
-            $response->src[$key]    = $src;
+            $temp                   = DATASOURCE::get($this, $conditions["method"], $key);
+            $response->src[$key]    = $temp;
             
             // バリデートコンディションの正規化
             $conditions             = $this->normarize_condition($conditions);
             
+            // エンコード補正
+            $src                    = $this->unify_encoding($temp);
+            
             // バリデーション
             $response->dist[$key]   = $this->validate_individual($src, $key, $conditions, $response);
         }
+        
+        // バリデーション情報の統合
+        if($response->has_error)    { $response_set->has_error = true; }
+        $response_set->info             = new \stdClass();
+        $response_set->info->has_error  = $response->has_error;
+        $response_set->info->error      = $response->VE;
+        $response_set->info->offset     = $response->offset;
+        $response_set->info->src        = $response->src;
+        $response_set->data             = $response->dist;
+        
+        return $response_set;
     }
     
     /**
-     * 単一項目ごとのバリデーション
+     * ルール毎のバリデーション
      * 
      * @param   mixed       $src
-     * @param   mixed       $key            string|index
+     * @param   mixed       $key            string|int(index)
      * @param   array       $conditions
      * @param   \stdClass   $response
      * @return  mixed
@@ -316,7 +378,7 @@ abstract class BaseUME implements UME
                 return MULTIPLE::validate($this, $src, $key, $conditions, $response);       // 配列項目のバリデート
 
             default:
-
+                
                 return SINGLE::validate($this, $src, $key, $conditions, $response);         // 単一項目のバリデート
         }
     }
@@ -329,7 +391,7 @@ abstract class BaseUME implements UME
         $conditions["trim"]             = $conditions["trim"]           ?? UME::TRIM_ALL;
         $conditions["null_byte"]        = $conditions["null_byte"]      ?? false;
         $conditions["method"]           = $conditions["method"]         ?? UMESetting::DEFAULT_METHOD;
-        $conditions["require"]          = $conditions["type"]           ?? UMESetting::DEFAULT_REQUIRE;
+        $conditions["require"]          = $conditions["require"]        ?? UMESetting::DEFAULT_REQUIRE;
         
         return $conditions;
     }

@@ -32,7 +32,7 @@ class FILTER_Test extends TestCase
     public function setUp(): void
     {
         $ume            = new ChildUME();
-        $this->filters  = $ume->get_filters();
+        $this->filters  = $ume->getFilters();
     }
     
     /**

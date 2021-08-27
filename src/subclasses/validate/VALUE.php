@@ -31,12 +31,6 @@ class VALUE
      */
     public static function validate(UME $ume, $value, string $key, array $conditions, \stdClass $response)
     {
-        // エンコード矯正
-        if(is_string($value))
-        {
-            $value  = mb_convert_encoding($value, UMESettings::ENCODE, $ume->get_from_encoding());
-        }
-        
         // 事前処理：事前フィルタ適用、オートコレクト、NULLバイト除去、トリム
         $value  = self::prepare($ume, $value, $conditions);
         
@@ -46,20 +40,19 @@ class VALUE
             // バリデーション処理
             $result = VALIDATOR::do($ume, $value, $key, $conditions, $response);
             
-            if($result)
-            {
-                // 値確定処理：タイプキャスト、事後フィルタ
-                $value  = self::conclude($ume, $value, $conditions);
+            if(!$result)    { return null; }
 
-                // 許容範囲チェック
-                $is_in_range    = (isset($conditions["choice"]))
-                                        ? CHOICE::isInListValue ($ume, $value, $key, $conditions, $response)
-                                        : RANGE ::isInRange     ($ume, $value, $key, $conditions, $response)
-                                        ;
-            }
+            // 値確定処理：タイプキャスト、事後フィルタ
+            $value  = self::conclude($ume, $value, $conditions);
+
+            // 許容範囲チェック
+            $is_in_range    = (isset($conditions["choice"]))
+                                    ? CHOICE::isInListValue ($ume, $value, $key, $conditions, $response)
+                                    : RANGE ::isInRange     ($ume, $value, $key, $conditions, $response)
+                                    ;
         }
         
-        return $value;
+        return ($response->on_error) ? null : $value;
     }
     
     /**
@@ -73,10 +66,13 @@ class VALUE
     private static function prepare(UME $ume, $value, array $conditions)
     {
         // 事前フィルタ
-        if(!EX::empty($conditions["filter"]))       { $value = FILTER::do($ume->get_filters(), $value, $conditions); }
+        if(!EX::empty($conditions["filter"]))       { $value = FILTER::do($ume->getFilters(), $value, $conditions); }
+        
+        // 入力がない場合は処理を返す
+        if(EX::empty($value))   { return $value; }
         
         // オートコレクト
-        if($conditions["auto_correct"] === true)    { $value = CORRECTOR::do($ume->get_types()[$conditions["type"]], $value, $conditions); }
+        if($conditions["auto_correct"] === true)    { $value = CORRECTOR::do($ume->getTypes()[$conditions["type"]], $value, $conditions); }
         
         if(is_string($value))
         { 
@@ -104,10 +100,10 @@ class VALUE
         if(is_null($value)) { return null; }
 
         // タイプキャスト
-        $value  = TYPECAST::do($ume->get_types()[$conditions["type"]]["type"], $value);
+        $value  = TYPECAST::do($ume->getTypes()[$conditions["type"]]["type"], $value);
 
         // 事後フィルタ
-        $value  = CLOSER::do($ume->get_closers(), $value, $conditions);
+        $value  = CLOSER::do($ume->getClosers(), $value, $conditions);
         
         return $value;
     }

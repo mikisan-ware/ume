@@ -42,7 +42,6 @@ class FILE_Test_non_debuging_mode extends TestCase
     {
         $response               = new \stdClass();
         $response->has_error    = false;
-        $response->index        = "[要素: ".rand(1,100)."]";
         $response->VE           = [];
         $response->src          = [];
         $response->dist         = [];

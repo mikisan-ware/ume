@@ -21,8 +21,8 @@ class VALIDATOR
     public static function do(UME $ume, string $value, string $key, array $conditions, \stdClass $response): bool
     {
         $type   = $conditions["type"];
-        $types  = $ume->get_types()[$type];
-        $labels = $ume->get_labels();
+        $types  = $ume->getTypes()[$type];
+        $labels = $ume->getLabels();
         
         if(EX::empty($types["rule"]))   { return $value; }
         if(!is_callable($types["rule"]))
@@ -47,8 +47,9 @@ class VALIDATOR
         
         // バリデーションエラーメッセージ
         $label  = $labels["ja_JP"][$key] ?? $key;
-        $response->VE[$key]     = $types["error"]($label, $conditions) . $response->index;
+        $response->VE[$key]     = $types["error"]($label, $conditions);
         $response->has_error    = true;
+        $response->on_error     = true;
         
         return false;
     }

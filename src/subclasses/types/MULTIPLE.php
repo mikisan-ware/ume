@@ -13,10 +13,52 @@ declare(strict_types=1);
 namespace mikisan\core\basis\ume;
 
 use \mikisan\core\basis\ume\UME;
-use \mikisan\core\basis\ume\DATASOURCE;
+use \mikisan\core\basis\ume\REQUIREMENT;
+use \mikisan\core\exception\UMEException;
 
 class MULTIPLE
 {
+    
+    /**
+     * 配列項目のバリデーション
+     * 
+     * @param   UME         $ume
+     * @param   array       $data
+     * @param   string      $type
+     * @param   string      $key
+     * @param   array       $conditions
+     * @param   \stdClass   $response
+     * @return  mixed
+     * @throws  UMEException
+     */
+    public static function validate(UME $ume, $data, string $key, array $conditions, \stdClass $response)
+    {
+        $result = [];
+        if(!is_array($data))
+        {
+            $data_type  = gettype($data);
+            throw new UMEException("バリデーションルール {$key} として渡された値が配列ではありません。[type: {$data_type}]");
+        }
+        
+        $i = 0;
+        foreach($data as $src)
+        {
+            $response->on_error     = false;
+            
+            // バリデート
+            $result[]   = ($conditions["method"] === UME::FILES)
+                                ? FILE ::validate($ume, $src, $key, $conditions, $response)
+                                : VALUE::validate($ume, $src, $key, $conditions, $response)
+                                ;
+            if($response->on_error)
+            {
+                if(!isset($response->offset[$key]))  { $response->offset[$key] = []; }
+                $response->offset[$key][] = $i;
+            }
+            $i++;
+        }
+        return $result;
+    }
     
     /**
      * 配列項目のバリデート
@@ -29,7 +71,7 @@ class MULTIPLE
      * @param   \stdClass   $response
      * @return  void
      * @throws  UMEException
-     */
+     *
     public static function validate(UME $ume, $src, string $type, string $key, array $conditions, \stdClass $response) : array
     {
         // リクエスト取得
@@ -46,14 +88,12 @@ class MULTIPLE
                 foreach($values as &$data)
                 {
                     $i++;
-                    $response->index    = "[データ番号: {$i}]";
                     $data[$key]         = self::do($ume, $data[$key], $type, $key, $conditions, $response);
                 }
                 unset($data);
 
             default:
                 
-                $response->index    = "";
                 $values = self::do($ume, $src, $type, $key, $conditions, $response);
         }
 
@@ -75,8 +115,6 @@ class MULTIPLE
         foreach($values as $idx => &$value)
         {
             $i++;
-            $response->index    .= (is_int($idx)) ? "[要素: {$i}]" : "[要素: {$label}" ;
-            
             $value      = ($conditions["method"] === UME::FILES)
                                 ? FILE ::validate($ume, $value, $type, $key, $conditions, $response)
                                 : VALUE::validate($ume, $value, $type, $key, $conditions, $response)
@@ -96,7 +134,7 @@ class MULTIPLE
      * @param   string  $key
      * @return  array
      * @throws  UMEException
-     */
+     *
     private static function has_values(UME $ume, $src, string $label, string $key, array $conditions, \stdClass $response): bool
     {
         if(!is_array($src))
@@ -106,7 +144,7 @@ class MULTIPLE
         }
         if($conditions["require"] === true && EX::empty($src))
         {
-            $response->VE[$key]     = "[$label] は必須項目です。" . $response->index;;
+            $response->VE[$key]     = "[$label] は必須項目です。";
             $response->has_error    = true;
             
             return false;
@@ -114,5 +152,5 @@ class MULTIPLE
         
         return true;
     }
-    
+    */
 }

@@ -15,7 +15,7 @@ namespace mikisan\core\basis\ume;
 class FILTER
 {
     
-    public static function do(array $filters, string $value, array $conditions)
+    public static function do(array $filters, $value, array $conditions)
     {
         if(!isset($conditions["filter"]))   { return $value; }
         $applys    = explode("|", $conditions["filter"]);

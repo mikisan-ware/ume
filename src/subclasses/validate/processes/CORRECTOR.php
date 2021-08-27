@@ -18,7 +18,7 @@ use \mikisan\core\exception\UMEException;
 class CORRECTOR
 {
     
-    public static function do(array $types, string $value, array $conditions)
+    public static function do(array $types, $value, array $conditions)
     {
         if(EX::empty($types["correct"]))    { return $value; }
         if(!is_callable($types["correct"]))

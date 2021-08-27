@@ -32,9 +32,9 @@ class RANGE
      */
     public static function isInRange(UME $ume, $value, string $key, array $conditions, \stdClass $response): bool
     {
-        $types  = $ume->get_types();
+        $types  = $ume->getTypes();
         $type   = $types[$conditions["type"]]["type"];
-        $labels = $ume->get_labels();
+        $labels = $ume->getLabels();
         $label  = $labels["ja_JP"][$key] ?? $key;
         
         switch(true)
@@ -58,13 +58,14 @@ class RANGE
         
         if($value < $min)
         {
-            $response->VE[$key] = "[{$label}] は {$min} 以上の整数にしてください。" . $response->index;
+            $response->VE[$key] = "[{$label}] は {$min} 以上の整数にしてください。";
         }
         if($value > $max)
         {
-            $response->VE[$key] = "[{$label}] は {$max} 以下の整数にしてください。" . $response->index;
+            $response->VE[$key] = "[{$label}] は {$max} 以下の整数にしてください。";
         }
         $response->has_error    = true;
+        $response->on_error     = true;
         
         return false;
     }
@@ -78,13 +79,14 @@ class RANGE
         
         if($value < $min)
         {
-            $response->VE[$key] = "[{$label}] は {$min} 以上の実数にしてください。" . $response->index;;
+            $response->VE[$key] = "[{$label}] は {$min} 以上の実数にしてください。";;
         }
         if($value > $max)
         {
-            $response->VE[$key] = "[{$label}] は {$max} 以下の実数にしてください。" . $response->index;;
+            $response->VE[$key] = "[{$label}] は {$max} 以下の実数にしてください。";;
         }
         $response->has_error    = true;
+        $response->on_error     = true;
         
         return false;
     }
@@ -99,13 +101,14 @@ class RANGE
         
         if($len < $min)
         {
-            $response->VE[$key] = "[{$label}] は {$min} 文字以上にしてください。" . $response->index;;
+            $response->VE[$key] = "[{$label}] は {$min} 文字以上にしてください。";;
         }
         if($len > $max)
         {
-            $response->VE[$key] = "[{$label}] は {$max} 文字以下にしてください。" . $response->index;;
+            $response->VE[$key] = "[{$label}] は {$max} 文字以下にしてください。";;
         }
         $response->has_error    = true;
+        $response->on_error     = true;
         
         return false;
     }
@@ -122,15 +125,17 @@ class RANGE
         if($filesize < $allowed_min_size)
         {
             $min_limit  = is_int($min) ? "{$min} Bytes" : $min;
-            $response->VE[$key]     = "[{$label}] のファイルサイズが小さ過ぎます。許容されているファイルサイズは {$min_limit} です。" . $response->index;;
+            $response->VE[$key]     = "[{$label}] のファイルサイズが小さ過ぎます。許容されているファイルサイズは {$min_limit} です。";;
             $response->has_error    = true;
+            $response->on_error     = true;
             return false;
         }
         if($filesize > $allowed_max_size)
         {
             $max_limit              = is_int($max) ? "{$max} Bytes" : $max;
-            $response->VE[$key]     = "[{$label}] のファイルサイズが大き過ぎます。許容されているファイルサイズは {$max_limit} です。" . $response->index;;
+            $response->VE[$key]     = "[{$label}] のファイルサイズが大き過ぎます。許容されているファイルサイズは {$max_limit} です。";;
             $response->has_error    = true;
+            $response->on_error     = true;
             return false;
         }
         

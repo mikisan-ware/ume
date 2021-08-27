@@ -91,7 +91,7 @@ class CHOICE_Test extends TestCase
             "method" => UME::GET, "require" => false
         ];
         $value          = "jkl";
-        $labels         = $this->ume->get_labels();
+        $labels         = $this->ume->getLabels();
         $label          = $labels["ja_JP"][$key] ?? $key;
         $note           = "abc|def|ghi";
         
@@ -135,7 +135,7 @@ class CHOICE_Test extends TestCase
             "method" => UME::GET, "require" => false
         ];
         $value          = "def";
-        $labels     = $this->ume->get_labels();
+        $labels     = $this->ume->getLabels();
         $label      = $labels["ja_JP"][$key] ?? $key;
         
         $this->expectException(UMEException::class);
@@ -217,7 +217,7 @@ class CHOICE_Test extends TestCase
         $value["tmp_name"]      = "/tmp/phpn3FmFr";
         $value["error"]         = 0;
         $value["size"]          = 15476;
-        $labels         = $this->ume->get_labels();
+        $labels         = $this->ume->getLabels();
         $label          = $labels["ja_JP"][$key] ?? $key;
         $note           = "jpg|png|gif";
         
@@ -247,7 +247,7 @@ class CHOICE_Test extends TestCase
         $value["tmp_name"]      = "/tmp/phpn3FmFr";
         $value["error"]         = 0;
         $value["size"]          = 15476;
-        $labels         = $this->ume->get_labels();
+        $labels         = $this->ume->getLabels();
         $label          = $labels["ja_JP"][$key] ?? $key;
         $note           = "jpg|png|gif";
         //

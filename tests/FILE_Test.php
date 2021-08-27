@@ -25,7 +25,7 @@ require_once "{$project_root}/tests/TestCaseTrait.php";
 Autoload::register(__DIR__ . "/../src", true);
 Autoload::register(__DIR__ . "/folder", true);
 
-define("LIBRARY_DEBUG", true);
+if(!defined("LIBRARY_DEBUG"))   { define("LIBRARY_DEBUG", true); }
 
 class FILE_Test extends TestCase
 {
@@ -44,7 +44,6 @@ class FILE_Test extends TestCase
     {
         $response               = new \stdClass();
         $response->has_error    = false;
-        $response->index        = "[要素: ".rand(1,100)."]";
         $response->VE           = [];
         $response->src          = [];
         $response->dist         = [];
@@ -90,7 +89,7 @@ class FILE_Test extends TestCase
         $value["tmp_name"]      = __DIR__ . "/folder/upload_test_file.jpg";
         $value["error"]         = 0;
         $value["size"]          = 17498;
-        $labels     = $this->ume->get_labels();
+        $labels     = $this->ume->getLabels();
         $label      = $labels["ja_JP"][$key] ?? $key;
         $note           = $conditions["choice"];
         //
@@ -116,7 +115,7 @@ class FILE_Test extends TestCase
         $value["tmp_name"]      = __DIR__ . "/folder/upload_test_file.txt";
         $value["error"]         = 0;
         $value["size"]          = 1978;
-        $labels     = $this->ume->get_labels();
+        $labels     = $this->ume->getLabels();
         $label      = $labels["ja_JP"][$key] ?? $key;
         //
         $this->expectException(UMEException::class);
@@ -161,7 +160,7 @@ class FILE_Test extends TestCase
         $value["real_type"]     = "text/plain";
         $value["tmp_name"]      = __DIR__ . "/folder/upload_test_file.txt";
         $value["size"]          = 100000000;
-        $labels     = $this->ume->get_labels();
+        $labels     = $this->ume->getLabels();
         $label      = $labels["ja_JP"][$key] ?? $key;
         //
         $value["error"]         = UPLOAD_ERR_NO_FILE;
@@ -186,7 +185,7 @@ class FILE_Test extends TestCase
         $value["real_type"]     = "text/plain";
         $value["tmp_name"]      = __DIR__ . "/folder/upload_test_file.txt";
         $value["size"]          = 100000000;
-        $labels     = $this->ume->get_labels();
+        $labels     = $this->ume->getLabels();
         $label      = $labels["ja_JP"][$key] ?? $key;
         //
         $value["error"]         = UPLOAD_ERR_INI_SIZE;
@@ -216,7 +215,7 @@ class FILE_Test extends TestCase
         $value["real_type"]     = "text/plain";
         $value["tmp_name"]      = __DIR__ . "/folder/upload_test_file.txt";
         $value["size"]          = 100000000;
-        $labels     = $this->ume->get_labels();
+        $labels     = $this->ume->getLabels();
         $label      = $labels["ja_JP"][$key] ?? $key;
         //
         $value["error"]         = UPLOAD_ERR_EXTENSION;
@@ -242,7 +241,7 @@ class FILE_Test extends TestCase
         $value["tmp_name"]      = __DIR__ . "/folder/upload_test_file.txt";
         $value["error"]         = UPLOAD_ERR_OK;
         $value["size"]          = 0;
-        $labels     = $this->ume->get_labels();
+        $labels     = $this->ume->getLabels();
         $label      = $labels["ja_JP"][$key] ?? $key;
         //
         $this->expectException(UMEException::class);
@@ -267,7 +266,7 @@ class FILE_Test extends TestCase
         $value["tmp_name"]      = __DIR__ . "/folder/upload_test_file.txt";
         $value["error"]         = UPLOAD_ERR_OK;
         $value["size"]          = 1978;
-        $labels     = $this->ume->get_labels();
+        $labels     = $this->ume->getLabels();
         $label      = $labels["ja_JP"][$key] ?? $key;
         //
         $this->expectException(UMEException::class);
@@ -292,7 +291,7 @@ class FILE_Test extends TestCase
         $value["tmp_name"]      = __DIR__ . "/folder/upload_test_file.txt";
         $value["error"]         = UPLOAD_ERR_OK;
         $value["size"]          = 1978;
-        $labels     = $this->ume->get_labels();
+        $labels     = $this->ume->getLabels();
         $label      = $labels["ja_JP"][$key] ?? $key;
         //
         $this->expectException(UMEException::class);
@@ -317,7 +316,7 @@ class FILE_Test extends TestCase
         $value["tmp_name"]      = __DIR__ . "/folder/upload_test_file.txt";
         $value["error"]         = UPLOAD_ERR_OK;
         $value["size"]          = 1978;
-        $labels     = $this->ume->get_labels();
+        $labels     = $this->ume->getLabels();
         $label      = $labels["ja_JP"][$key] ?? $key;
         //
         $this->expectException(UMEException::class);
@@ -342,7 +341,7 @@ class FILE_Test extends TestCase
         $value["tmp_name"]      = __DIR__ . "/folder/upload_test_file.txt";
         $value["error"]         = UPLOAD_ERR_OK;
         $value["size"]          = 1978;
-        $labels     = $this->ume->get_labels();
+        $labels     = $this->ume->getLabels();
         $label      = $labels["ja_JP"][$key] ?? $key;
         //
         $this->expectException(UMEException::class);
@@ -367,7 +366,7 @@ class FILE_Test extends TestCase
         $value["tmp_name"]      = __DIR__ . "/folder/upload_test_file.txt";
         $value["error"]         = UPLOAD_ERR_OK;
         $value["size"]          = 1978;
-        $labels     = $this->ume->get_labels();
+        $labels     = $this->ume->getLabels();
         $label      = $labels["ja_JP"][$key] ?? $key;
         //
         $this->expectException(UMEException::class);
@@ -392,7 +391,7 @@ class FILE_Test extends TestCase
         $value["tmp_name"]      = __DIR__ . "/folder/upload_test_file.txt";
         $value["error"]         = UPLOAD_ERR_OK;
         $value["size"]          = 1978;
-        $labels     = $this->ume->get_labels();
+        $labels     = $this->ume->getLabels();
         $label      = $labels["ja_JP"][$key] ?? $key;
         //
         $this->expectException(UMEException::class);

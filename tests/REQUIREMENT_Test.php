@@ -41,7 +41,6 @@ class REQUIREMENT_Test extends TestCase
         $response               = new \stdClass();
         $response->VE           = [];
         $response->has_error    = false;
-        $response->index        = "[要素: ".rand(1,100)."]";
         
         return $response;
     }
@@ -60,11 +59,11 @@ class REQUIREMENT_Test extends TestCase
         $string     = "あいうえお漢字<script>alert(\"XSS!\");ABC12345=!*";
         $value      = "";
         $response   = $this->get_response();
-        $labels     = $this->ume->get_labels();
+        $labels     = $this->ume->getLabels();
         $label      = $labels["ja_JP"][$key] ?? $key;
         //
         $this->assertSame(false, $this->callMethod($this->class_name, "fail", [$this->ume, $key, $response]));
-        $this->assertSame("[$label] は必須項目です。{$response->index}", $response->VE[$key]);
+        $this->assertSame("[$label] は必須項目です。", $response->VE[$key]);
         $this->assertSame(true, $response->has_error);
     }
     
@@ -100,13 +99,13 @@ class REQUIREMENT_Test extends TestCase
         ];
         $value      = "";
         $response   = $this->get_response();
-        $labels     = $this->ume->get_labels();
+        $labels     = $this->ume->getLabels();
         $label      = $labels["ja_JP"][$key] ?? $key;
         //
         $result     = REQUIREMENT::should_validate($this->ume, $value, $key, $conditions, $response);
         $this->assertSame(false, $result);
         $this->assertSame(true, $response->has_error);
-        $this->assertSame("[$label] は必須項目です。{$response->index}", $response->VE[$key]);
+        $this->assertSame("[$label] は必須項目です。", $response->VE[$key]);
     }
     
     /**
@@ -122,13 +121,13 @@ class REQUIREMENT_Test extends TestCase
         ];
         $value      = null;
         $response   = $this->get_response();
-        $labels     = $this->ume->get_labels();
+        $labels     = $this->ume->getLabels();
         $label      = $labels["ja_JP"][$key] ?? $key;
         //
         $result     = REQUIREMENT::should_validate($this->ume, $value, $key, $conditions, $response);
         $this->assertSame(false, $result);
         $this->assertSame(true, $response->has_error);
-        $this->assertSame("[$label] は必須項目です。{$response->index}", $response->VE[$key]);
+        $this->assertSame("[$label] は必須項目です。", $response->VE[$key]);
     }
     
     /**

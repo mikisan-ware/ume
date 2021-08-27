@@ -122,6 +122,9 @@ class UMESettings
     public static function filters(): array
     {
         return [
+            "string"    => function($value) { return (string)$value; },
+            "int"       => function($value) { return (int)$value; },
+            "real"      => function($value) { return (double)$value; },
             "base64"    => function($value) { return base64_decode($value, false); },
             "htmlspec"  => function($value) { return htmlspecialchars_decode($value, ENT_QUOTES|ENT_HTML5); }
         ];

@@ -24,15 +24,15 @@ class MIME
      */
     public static function getMIME(string $path): string
     {
-        if (!is_file($path))                { throw new PineException(util\I18N::get("MIME.specified_path_not_exists", [$path], "指定されたパスが存在しません。[:@0]")); }
-        if (!function_exists("finfo_open")) { throw new PineException(util\I18N::get("MIME.finfo_open_could_not_use", [], "finfo_open() はPHPで読み込まれていません。")); }
+        if (!is_file($path))                { throw new \Exception("指定されたパスが存在しません。[{$path}]"); }
+        if (!function_exists("finfo_open")) { throw new \Exception("finfo_open() はPHPで読み込まれていません。"); }
 
         $data       = file_get_contents($path);
         $finfo      = finfo_open(FILEINFO_MIME_TYPE);   // MIMEタイプ取得に設定する
         $mime_type  = finfo_buffer($finfo, $data);
         finfo_close($finfo);
         
-        if(!is_string($mime_type))  { throw new PineException(util\I18N::get("MIME.mime_type_undefined", [$path], "MIME-Typeが識別できませんでした。[:@0]")); }
+        if(!is_string($mime_type))  { throw new \Exception( "MIME-Typeが識別できませんでした。[{$path}]"); }
 
         return $mime_type;
     }

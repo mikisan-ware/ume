@@ -14,6 +14,7 @@ use \mikisan\core\util\autoload\Autoload;
 use \PHPUnit\Framework\TestCase;
 use \mikisan\core\basis\ume\UME;
 use \mikisan\core\basis\ume\DATASOURCE;
+use \mikisan\core\exception\UMEException;
 use \mikisan\core\util\router\Router;
 use \mikisan\pine\app\ChildUME;
 
@@ -40,6 +41,35 @@ class DATASOURCE_Test extends TestCase
         $_GET["param2"]     = "456";
         $_COOKIE["param1"]  = "ghi";
         $_COOKIE["param2"]  = "789";
+        $_FILES["param1"]   = [
+            "name"      => "MyFile.txt",
+            "type"      => "text/plain",
+            "tmp_name"  => "C:/NetBeansProjects/mikisan/core/basis/ume/tests/folder/upload_test_file.txt",
+            "error"     => UPLOAD_ERR_OK,
+            "size"      => 1978
+        ];
+        $_FILES["param2"]   = [
+            "name" => [
+                "MyFile.txt",
+                "MyFile.jpg"
+            ],
+            "type" => [
+                "text/plain",
+                "image/jpeg"
+            ],
+            "tmp_name" => [
+                "C:/NetBeansProjects/mikisan/core/basis/ume/tests/folder/upload_test_file.jpg",
+                "C:/NetBeansProjects/mikisan/core/basis/ume/tests/folder/upload_test_file2.PNG"
+            ],
+            "error" => [
+                UPLOAD_ERR_OK,
+                UPLOAD_ERR_OK
+            ],
+            "size" => [
+                123,
+                98174
+            ]
+        ];
     }
     
     public function test_get_post()
@@ -88,6 +118,44 @@ class DATASOURCE_Test extends TestCase
         $this->assertSame("efgh", DATASOURCE::get($this->ume, UME::ARGS, 1));
         $this->assertSame("987", DATASOURCE::get($this->ume, UME::ARGS, 2));
         $this->assertSame(null, DATASOURCE::get($this->ume, UME::ARGS, 3));
+    }
+    
+    public function test_get_files_single()
+    {
+        $files  = DATASOURCE::get($this->ume, UME::FILES, "param1");
+        //
+        $this->assertSame("MyFile.txt", $files["name"]);
+        $this->assertSame("text/plain", $files["type"]);
+        $this->assertSame("C:/NetBeansProjects/mikisan/core/basis/ume/tests/folder/upload_test_file.txt", $files["tmp_name"]);
+        $this->assertSame(UPLOAD_ERR_OK, $files["error"]);
+        $this->assertSame(1978, $files["size"]);
+    }
+    
+    public function test_get_files_multiple()
+    {
+        $files  = DATASOURCE::get($this->ume, UME::FILES, "param2");
+        $this->assertCount(2, $files);
+        //
+        $this->assertSame("MyFile.txt", $files[0]["name"]);
+        $this->assertSame("image/jpeg", $files[0]["type"]);
+        $this->assertSame("C:/NetBeansProjects/mikisan/core/basis/ume/tests/folder/upload_test_file.jpg", $files[0]["tmp_name"]);
+        $this->assertSame(UPLOAD_ERR_OK, $files[0]["error"]);
+        $this->assertSame(123, $files[0]["size"]);
+        //
+        $this->assertSame("MyFile.jpg", $files[1]["name"]);
+        $this->assertSame("image/png", $files[1]["type"]);
+        $this->assertSame("C:/NetBeansProjects/mikisan/core/basis/ume/tests/folder/upload_test_file2.PNG", $files[1]["tmp_name"]);
+        $this->assertSame(UPLOAD_ERR_OK, $files[1]["error"]);
+        $this->assertSame(98174, $files[1]["size"]);
+    }
+    
+    public function test_get_undefined_method()
+    {
+        $key            = "params1";
+        $target_method  = "undefined";
+        $this->expectException(UMEException::class);
+        $this->expectExceptionMessage("バリデーション設定内に記述された、キー [{$key}] の method [{$target_method}] は定義されていません。");
+        DATASOURCE::get($this->ume, $target_method, $key);
     }
     
 }

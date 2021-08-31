@@ -52,7 +52,8 @@ class ChildUME extends ModuleCommonUME
                 "page"  => "ページ",
                 "test"  => "テスト",
                 "test3" => "テスト3",
-                "test[]"    => "テスト"
+                "test[]"    => "テスト",
+                "param" => "データ値"
             ],
         ];
     }

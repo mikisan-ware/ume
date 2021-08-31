@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace mikisan\core\basis\ume;
 
 use \mikisan\core\basis\ume\UME;
+use \mikisan\core\basis\ume\SELECTOR;
 use \mikisan\core\exception\UMEException;
 use \mikisan\core\util\ex\EX;
 
@@ -33,28 +34,26 @@ class FILE
     public static function validate(UME $ume, array $file, string $key, array $conditions, \stdClass $response): array
     {
         // アップロードファイルのセキュリティチェック
-        self::filecheck($ume, $file, $key);
+        self::filecheck($ume, $file, $key, $response);
         
         // 拡張子チェック
         $is_in_range    = (isset($conditions["choice"]))
                                 ? CHOICE::isInListFileType($ume, $file, $key, $conditions, $response)
-                                : self::filetype_undefineded($ume, $file, $key)
+                                : self::filetype_undefineded($ume, $file, $key, $response)
                                 ;
         return $file;
     }
     
-    private static function filetype_undefineded(UME $ume, $value, string $key): void
+    private static function filetype_undefineded(UME $ume, $value, string $key, \stdClass $response): void
     {
-        $labels     = $ume->getLabels();
-        $label      = $labels["ja_JP"][$key] ?? $key;
+        $label  = SELECTOR::getLabel($ume, $key, $response);
         
         throw new UMEException("[{$label}] でアップロード可能なファイル形式（拡張子）を choice で指定してください。");
     }
     
-    private static function filecheck(UME $ume, $value, string $key): bool
+    private static function filecheck(UME $ume, $value, string $key, \stdClass $response): bool
     {
-        $labels     = $ume->getLabels();
-        $label      = $labels["ja_JP"][$key] ?? $key;
+        $label  = SELECTOR::getLabel($ume, $key, $response);
         
         // 正常にアップロードされたか？
         if($value["error"] !== 0)

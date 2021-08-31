@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace mikisan\core\basis\ume;
 
+use \mikisan\core\basis\ume\SELECTOR;
 use \mikisan\core\exception\UMEException;
 use \mikisan\core\util\ex\EX;
 
@@ -60,8 +61,7 @@ class REQUIREMENT
      */
     public static function fail(UME $ume, string $key, \stdClass $response): bool
     {
-        $labels = $ume->getLabels();
-        $label  = $labels["ja_JP"][$key] ?? $key;
+        $label  = SELECTOR::getLabel($ume, $key, $response);
         $response->VE[$key]     = "[$label] は必須項目です。";
         $response->has_error    = true;
         $response->on_error     = true;

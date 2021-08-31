@@ -14,6 +14,7 @@ namespace mikisan\core\basis\ume;
 
 use \mikisan\core\basis\ume\UME;
 use \mikisan\core\basis\ume\UMESettings;
+use \mikisan\core\basis\ume\SELECTOR;
 use \mikisan\core\exception\UMEException;
 use \mikisan\core\util\ex\EX;
 use \mikisan\core\util\mime\MIME;
@@ -33,8 +34,7 @@ class CHOICE
      */
     public static function isInListValue(UME $ume, $value, string $key, array $conditions, \stdClass $response): bool
     {
-        $labels     = $ume->getLabels();
-        $label      = $labels["ja_JP"][$key] ?? $key;
+        $label  = SELECTOR::getLabel($ume, $key, $response);
         $allowed    = self::get_allowed($conditions["choice"], $label);
         
         if(in_array($value, $allowed, true))   { return true; }
@@ -60,8 +60,7 @@ class CHOICE
      */
     public static function isInListFileType(UME $ume, $value, string $key, array $conditions, \stdClass $response): bool
     {
-        $labels     = $ume->getLabels();
-        $label      = $labels["ja_JP"][$key] ?? $key;
+        $label  = SELECTOR::getLabel($ume, $key, $response);
         
         if(!isset($conditions["choice"]))
         {

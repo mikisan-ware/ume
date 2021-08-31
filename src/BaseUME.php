@@ -247,6 +247,7 @@ abstract class BaseUME implements UME
         $response->offset       = [];
         $response->src          = [];
         $response->dist         = [];
+        $response->index        = "";
         
         return $response;
     }
@@ -258,22 +259,6 @@ abstract class BaseUME implements UME
                                 : $this->fetch_normal()
                                 ;
         return $this;
-    }
-    
-    /**
-     * エンコード補正
-     * 
-     * @param   mixed   $temp
-     * @return  mixed
-     */
-    private function unify_encoding($temp)
-    { 
-        if(!is_string($temp))   { return $temp; }
-        
-        return (UMESettings::ENCODE !== $this->getFromEncoding())
-                        ? mb_convert_encoding($temp, UMESettings::ENCODE, $this->getFromEncoding())
-                        : $temp
-                        ;
     }
     
     /**
@@ -296,11 +281,8 @@ abstract class BaseUME implements UME
                 // バリデートコンディションの正規化
                 $conditions             = $this->normarize_condition($conditions);
                 
-                // エンコード補正
-                $src                    = $this->unify_encoding($row[$key]);
-                
                 // バリデーション
-                $response->dist[$key]   = $this->validate_individual($src, $key, $conditions, $response);
+                $response->dist[$key]   = INDIVIDUAL::validate($this, $src, $key, $conditions, $response);
             }
             
             // バリデーション情報の統合
@@ -330,18 +312,7 @@ abstract class BaseUME implements UME
         
         foreach($this->rules as $key => $conditions)
         {
-            // リクエスト取得
-            $temp                   = DATASOURCE::get($this, $conditions["method"], $key);
-            $response->src[$key]    = $temp;
-            
-            // バリデートコンディションの正規化
-            $conditions             = $this->normarize_condition($conditions);
-            
-            // エンコード補正
-            $src                    = $this->unify_encoding($temp);
-            
-            // バリデーション
-            $response->dist[$key]   = $this->validate_individual($src, $key, $conditions, $response);
+            VALIDATE::do($this, $key, $this->normarize_condition($conditions), $response);
         }
         
         // バリデーション情報の統合
@@ -357,32 +328,11 @@ abstract class BaseUME implements UME
     }
     
     /**
-     * ルール毎のバリデーション
+     * バリデートコンディションの正規化
      * 
-     * @param   mixed       $src
-     * @param   mixed       $key            string|int(index)
-     * @param   array       $conditions
-     * @param   \stdClass   $response
-     * @return  mixed
+     * @param   array   $conditions
+     * @return  array
      */
-    private function validate_individual($src, $key, array $conditions, \stdClass $response)
-    {
-        switch(true)
-        {
-            case preg_match("|\A([^%]+)_(%_)*%(\[\])?\z|u", $key):
-
-                return HIERARCHY::validate($this, $type, $key, $conditions, $response);     // 階層連番項目のバリデート
-
-            case preg_match("|\A.+\[\]\z|u", $key):
-
-                return MULTIPLE::validate($this, $src, $key, $conditions, $response);       // 配列項目のバリデート
-
-            default:
-                
-                return SINGLE::validate($this, $src, $key, $conditions, $response);         // 単一項目のバリデート
-        }
-    }
-    
     private static function normarize_condition(array $conditions): array
     {
         $conditions["type"]             = $conditions["type"]           ?? "text";

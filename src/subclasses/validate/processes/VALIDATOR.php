@@ -12,6 +12,8 @@ declare(strict_types=1);
 
 namespace mikisan\core\basis\ume;
 
+use \mikisan\core\basis\ume\SELECTOR;
+use \mikisan\core\basis\ume\RESULT;
 use \mikisan\core\exception\UMEException;
 use \mikisan\core\util\ex\EX;
 
@@ -22,7 +24,6 @@ class VALIDATOR
     {
         $type   = $conditions["type"];
         $types  = $ume->getTypes()[$type];
-        $labels = $ume->getLabels();
         
         if(EX::empty($types["rule"]))   { return $value; }
         if(!is_callable($types["rule"]))
@@ -46,7 +47,7 @@ class VALIDATOR
         }
         
         // バリデーションエラーメッセージ
-        $label  = $labels["ja_JP"][$key] ?? $key;
+        $label  = SELECTOR::getLabel($ume, $key, $response);
         $response->VE[$key]     = $types["error"]($label, $conditions);
         $response->has_error    = true;
         $response->on_error     = true;

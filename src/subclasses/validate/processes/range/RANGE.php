@@ -14,6 +14,7 @@ namespace mikisan\core\basis\ume;
 
 use \mikisan\core\basis\ume\UME;
 use \mikisan\core\basis\ume\UMESettings;
+use \mikisan\core\basis\ume\SELECTOR;
 use \mikisan\core\exception\UMEException;
 use \mikisan\core\util\ex\EX;
 
@@ -34,8 +35,7 @@ class RANGE
     {
         $types  = $ume->getTypes();
         $type   = $types[$conditions["type"]]["type"];
-        $labels = $ume->getLabels();
-        $label  = $labels["ja_JP"][$key] ?? $key;
+        $label  = SELECTOR::getLabel($ume, $key, $response);
         
         switch(true)
         {

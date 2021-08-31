@@ -24,6 +24,7 @@
       <file>tests/FILE_Test.php</file>
       <file>tests/SINGLE_Test.php</file>
       <file>tests/MULTIPLE_Test.php</file>
+      <file>tests/VALIDATE_Test.php</file>
       <file>tests/ChildUME_Test.php</file>
       <file>tests/Child2UME_Test.php</file>
       <file>tests/MultipleUME_Test.php</file>

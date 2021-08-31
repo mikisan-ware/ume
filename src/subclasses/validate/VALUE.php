@@ -56,6 +56,23 @@ class VALUE
     }
     
     /**
+     * エンコード補正
+     * 
+     * @param   UME     $ume
+     * @param   mixed   $temp
+     * @return  mixed
+     */
+    private static function unify_encoding(UME $ume, $temp)
+    { 
+        if(!is_string($temp))   { return $temp; }
+        
+        return (UMESettings::ENCODE !== $ume->getFromEncoding())
+                        ? mb_convert_encoding($temp, UMESettings::ENCODE, $ume->getFromEncoding())
+                        : $temp
+                        ;
+    }
+    
+    /**
      * 事前処理
      * 
      * @param   UME     $ume
@@ -65,6 +82,9 @@ class VALUE
      */
     private static function prepare(UME $ume, $value, array $conditions)
     {
+        // エンコード補正
+        $value  = self::unify_encoding($ume, $value);
+        
         // 事前フィルタ
         if(!EX::empty($conditions["filter"]))       { $value = FILTER::do($ume->getFilters(), $value, $conditions); }
         

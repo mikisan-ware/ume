@@ -19,10 +19,27 @@ use \mikisan\core\util\mime\MIME;
 class DATASOURCE
 {
     
+        public static function all(string $target_method)
+    {
+        $method = strtoupper($target_method);
+        
+        switch (true)
+        {
+            case $method === UME::POST:         return $_POST;
+            case $method === UME::GET:          return $_GET;
+            case $method === UME::COOKIE:       return $_COOKIE;
+                
+            default:
+                
+                throw new UMEException("バリデーション設定内に記述された、キー [{$key}] の method [{$target_method}] は定義されていません。");
+        }
+    }
+    
+    
     /**
      * データの取得
      */
-    public static function get(UME $ume, string $target_method, mixed $key)
+    public static function get(string $target_method, mixed $key)
     {
         $method = strtoupper($target_method);
         

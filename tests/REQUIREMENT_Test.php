@@ -39,9 +39,13 @@ class REQUIREMENT_Test extends TestCase
     private function get_response(): \stdClass
     {
         $response               = new \stdClass();
-        $response->VE           = [];
         $response->has_error    = false;
-        
+        $response->on_error     = false;
+        $response->VE           = [];
+        $response->offset       = [];
+        $response->src          = [];
+        $response->dist         = [];
+        $response->index        = "";
         return $response;
     }
     

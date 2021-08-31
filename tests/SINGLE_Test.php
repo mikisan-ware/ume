@@ -46,8 +46,10 @@ class SINGLE_Test extends TestCase
         $response->has_error    = false;
         $response->on_error     = false;
         $response->VE           = [];
+        $response->offset       = [];
         $response->src          = [];
         $response->dist         = [];
+        $response->index        = "";
         return $response;
     }
     

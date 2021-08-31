@@ -36,14 +36,25 @@ class RANGE_Test extends TestCase
         $this->ume      = new ChildUME();
     }
     
+    private function get_response(): \stdClass
+    {
+        $response               = new \stdClass();
+        $response->has_error    = false;
+        $response->on_error     = false;
+        $response->VE           = [];
+        $response->offset       = [];
+        $response->src          = [];
+        $response->dist         = [];
+        $response->index        = "";
+        return $response;
+    }
+    
     /**
      * TYPE_INTEGER
      */
     public function test_isInRange_int()
     {
-        $response           = new \stdClass();
-        $response->VE       = [];
-        $response->src      = [];
+        $response           = $this->get_response();
         $key                = "test";
         $conditions         = [
             "type" => "int", "min" => PHP_INT_MIN, "max" => PHP_INT_MAX,
@@ -61,9 +72,7 @@ class RANGE_Test extends TestCase
      */
     public function test_isInRange_int_under()
     {
-        $response           = new \stdClass();
-        $response->VE       = [];
-        $response->src      = [];
+        $response           = $this->get_response();
         $key                = "test";
         $conditions         = [
             "type" => "int", "min" => 200, "max" => PHP_INT_MAX,
@@ -84,10 +93,7 @@ class RANGE_Test extends TestCase
      */
     public function test_isInRange_int_orver()
     {
-        $response           = new \stdClass();
-        $response->VE       = [];
-        $response->src      = [];
-        $response->index    = "[要素: ".rand(1,100)."]";
+        $response           = $this->get_response();
         $key                = "test";
         $conditions         = [
             "type" => "int", "min" => 200, "max" => 1000,
@@ -108,10 +114,7 @@ class RANGE_Test extends TestCase
      */
     public function test_isInRange_real()
     {
-        $response           = new \stdClass();
-        $response->VE       = [];
-        $response->src      = [];
-        $response->index    = "[要素: ".rand(1,100)."]";
+        $response           = $this->get_response();
         $key                = "test";
         $conditions         = [
             "type" => "double", "min" => PHP_INT_MIN, "max" => PHP_INT_MAX,
@@ -129,10 +132,7 @@ class RANGE_Test extends TestCase
      */
     public function test_isInRange_real_under()
     {
-        $response           = new \stdClass();
-        $response->VE       = [];
-        $response->src      = [];
-        $response->index    = "[要素: ".rand(1,100)."]";
+        $response           = $this->get_response();
         $key                = "test";
         $conditions         = [
             "type" => "double", "min" => 123.45, "max" => PHP_INT_MAX,
@@ -153,10 +153,7 @@ class RANGE_Test extends TestCase
      */
     public function test_isInRange_real_orver()
     {
-        $response           = new \stdClass();
-        $response->VE       = [];
-        $response->src      = [];
-        $response->index    = "[要素: ".rand(1,100)."]";
+        $response           = $this->get_response();
         $key                = "test";
         $conditions         = [
             "type" => "double", "min" => 200, "max" => 1000.45,
@@ -177,10 +174,7 @@ class RANGE_Test extends TestCase
      */
     public function test_isInRange_string()
     {
-        $response           = new \stdClass();
-        $response->VE       = [];
-        $response->src      = [];
-        $response->index    = "[要素: ".rand(1,100)."]";
+        $response           = $this->get_response();
         $key                = "test";
         $conditions         = [
             "type" => "text", "min" => PHP_INT_MIN, "max" => PHP_INT_MAX,
@@ -198,10 +192,7 @@ class RANGE_Test extends TestCase
      */
     public function test_isInRange_string_under()
     {
-        $response           = new \stdClass();
-        $response->VE       = [];
-        $response->src      = [];
-        $response->index    = "[要素: ".rand(1,100)."]";
+        $response           = $this->get_response();
         $key                = "test";
         $conditions         = [
             "type" => "text", "min" => 7, "max" => PHP_INT_MAX,
@@ -222,10 +213,7 @@ class RANGE_Test extends TestCase
      */
     public function test_isInRange_string_orver()
     {
-        $response           = new \stdClass();
-        $response->VE       = [];
-        $response->src      = [];
-        $response->index    = "[要素: ".rand(1,100)."]";
+        $response           = $this->get_response();
         $key                = "test";
         $conditions         = [
             "type" => "text", "min" => 7, "max" => 8,
@@ -246,10 +234,7 @@ class RANGE_Test extends TestCase
      */
     public function test_isInRange_file_1()
     {
-        $response           = new \stdClass();
-        $response->VE       = [];
-        $response->src      = [];
-        $response->index    = "[要素: ".rand(1,100)."]";
+        $response           = $this->get_response();
         $key                = "test";
         $conditions         = [
             "type" => "file", "min" => 0, "max" => 1024,
@@ -272,10 +257,7 @@ class RANGE_Test extends TestCase
     
     public function test_isInRange_file_2()
     {
-        $response           = new \stdClass();
-        $response->VE       = [];
-        $response->src      = [];
-        $response->index    = "[要素: ".rand(1,100)."]";
+        $response           = $this->get_response();
         $key                = "test";
         $conditions         = [
             "type" => "file", "min" => 0, "max" => "1KiB",
@@ -301,10 +283,7 @@ class RANGE_Test extends TestCase
      */
     public function test_isInRange_file_under()
     {
-        $response           = new \stdClass();
-        $response->VE       = [];
-        $response->src      = [];
-        $response->index    = "[要素: ".rand(1,100)."]";
+        $response           = $this->get_response();
         $key                = "test";
         $conditions         = [
             "type" => "file", "min" => 10, "max" => PHP_INT_MAX,
@@ -331,10 +310,7 @@ class RANGE_Test extends TestCase
      */
     public function test_isInRange_file_orver_1()
     {
-        $response           = new \stdClass();
-        $response->VE       = [];
-        $response->src      = [];
-        $response->index    = "[要素: ".rand(1,100)."]";
+        $response           = $this->get_response();
         $key                = "test";
         $conditions         = [
             "type" => "file", "min" => 0, "max" => 1024,
@@ -361,10 +337,7 @@ class RANGE_Test extends TestCase
      */
     public function test_isInRange_file_orver_2()
     {
-        $response           = new \stdClass();
-        $response->VE       = [];
-        $response->src      = [];
-        $response->index    = "[要素: ".rand(1,100)."]";
+        $response           = $this->get_response();
         $key                = "test";
         $conditions         = [
             "type" => "file", "min" => 0, "max" => "1KiB",
@@ -392,10 +365,7 @@ class RANGE_Test extends TestCase
      */
     public function test_isInRange_file_wrong_unit_sepcified()
     {
-        $response           = new \stdClass();
-        $response->VE       = [];
-        $response->src      = [];
-        $response->index    = "[要素: ".rand(1,100)."]";
+        $response           = $this->get_response();
         $key                = "test";
         $conditions         = [
             "type" => "file", "min" => 0, "max" => "1FiB",

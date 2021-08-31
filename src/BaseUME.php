@@ -282,7 +282,7 @@ abstract class BaseUME implements UME
                 $conditions             = $this->normarize_condition($conditions);
                 
                 // バリデーション
-                $response->dist[$key]   = INDIVIDUAL::validate($this, $src, $key, $conditions, $response);
+                $response->dist[$key]   = INDIVIDUAL::validate($this, $row[$key], $key, $conditions, $response);
             }
             
             // バリデーション情報の統合

@@ -41,10 +41,11 @@ class VALUE_Test extends TestCase
         $response               = new \stdClass();
         $response->has_error    = false;
         $response->on_error     = false;
-        $response->index        = "[要素: ".rand(1,100)."]";
         $response->VE           = [];
+        $response->offset       = [];
         $response->src          = [];
         $response->dist         = [];
+        $response->index        = "";
         return $response;
     }
     

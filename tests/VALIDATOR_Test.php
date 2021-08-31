@@ -30,13 +30,23 @@ class VALIDATOR_Test extends TestCase
     use TestCaseTrait;
     
     protected   $ume;
-    protected   $response;
 
     public function setUp(): void
     {
         $this->ume              = new ChildUME();
-        $this->response         = new \stdClass();
-        $this->response->VE     = [];
+    }
+    
+    private function get_response(): \stdClass
+    {
+        $response               = new \stdClass();
+        $response->has_error    = false;
+        $response->on_error     = false;
+        $response->VE           = [];
+        $response->offset       = [];
+        $response->src          = [];
+        $response->dist         = [];
+        $response->index        = "";
+        return $response;
     }
     
     /**
@@ -44,6 +54,7 @@ class VALIDATOR_Test extends TestCase
      */
     public function test_do_digit()
     {
+        $response       = $this->get_response();
         $key        = "test";
         $conditions = [
             "type" => "digit", "min" => PHP_INT_MIN, "max" => PHP_INT_MAX, 
@@ -53,21 +64,21 @@ class VALIDATOR_Test extends TestCase
         $type   = $conditions["type"];
         //
         $value  = "1234567890";
-        $result = VALIDATOR::do($this->ume, $value, $key, $conditions, $this->response);
+        $result = VALIDATOR::do($this->ume, $value, $key, $conditions, $response);
         $this->assertSame(true, $result);
         //
         $value  = "あいうえおー漢字－１２３４５６７８９０ＡＢＣＤＥＦＧｈｉｊｋｌｍｎ<script>alert(\"XSS!\");@＠ABC12345=！＃＄％＆（）－＝「」＊!#$%&()=[]*";
         $expect = "あいうえおー漢字－1234567890ＡＢＣＤＥＦＧｈｉｊｋｌｍｎ<script>alert(\"XSS!\");@＠ABC12345=！＃＄％＆（）－＝「」＊!#$%&()=[]*";
-        $result = VALIDATOR::do($this->ume, $value, $key, $conditions, $this->response);
+        $result = VALIDATOR::do($this->ume, $value, $key, $conditions, $response);
         $this->assertSame(false, $result);
-        $this->assertSame("[テスト] には半角数字以外が含まれています。", $this->response->VE["test"]);
+        $this->assertSame("[テスト] には半角数字以外が含まれています。", $response->VE["test"]);
         //
         $failcases  = ["１２３４５６７８９０", "-1234567890", "1,234,567,890", "1234-567890", "Ā", "ɑ", "#", "@", "Ⅲ", "⑤", "七"];
         foreach($failcases as $value)
         {
-            $result = VALIDATOR::do($this->ume, $value, $key, $conditions, $this->response);
+            $result = VALIDATOR::do($this->ume, $value, $key, $conditions, $response);
             $this->assertSame(false, $result);
-            $this->assertSame("[テスト] には半角数字以外が含まれています。", $this->response->VE["test"]);
+            $this->assertSame("[テスト] には半角数字以外が含まれています。", $response->VE["test"]);
         }
     }
     
@@ -76,6 +87,7 @@ class VALIDATOR_Test extends TestCase
      */
     public function test_do_alphabet()
     {
+        $response       = $this->get_response();
         $key        = "test";
         $conditions = [
             "type" => "alphabet", "min" => PHP_INT_MIN, "max" => PHP_INT_MAX, 
@@ -85,20 +97,20 @@ class VALIDATOR_Test extends TestCase
         $type   = $conditions["type"];
         //
         $value = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        $result = VALIDATOR::do($this->ume, $value, $key, $conditions, $this->response);
+        $result = VALIDATOR::do($this->ume, $value, $key, $conditions, $response);
         $this->assertSame(true, $result);
         //
         $value  = "あいうえおー漢字－１２３４５６７８９０ＡＢＣＤＥＦＧｈｉｊｋｌｍｎ<script>alert(\"XSS!\");@＠ABC12345=！＃＄％＆（）－＝「」＊!#$%&()=[]*";
         $expect ="あいうえおー漢字－１２３４５６７８９０ABCDEFGhijklmn<script>alert(\"XSS!\");@＠ABC12345=！＃＄％＆（）－＝「」＊!#$%&()=[]*";
-        $result = VALIDATOR::do($this->ume, $value, $key, $conditions, $this->response);
+        $result = VALIDATOR::do($this->ume, $value, $key, $conditions, $response);
         $this->assertSame(false, $result);
         //
         $failcases  = ["ａｂｃｄｅｆｇ", "ＡＢＣＤＥＦＧ", "Ā", "ɑ", "#", "@", "＠", "Ω"];
         foreach($failcases as $value)
         {
-            $result = VALIDATOR::do($this->ume, $value, $key, $conditions, $this->response);
+            $result = VALIDATOR::do($this->ume, $value, $key, $conditions, $response);
             $this->assertSame(false, $result);
-            $this->assertSame("[テスト] には英字以外が含まれています。", $this->response->VE["test"]);
+            $this->assertSame("[テスト] には英字以外が含まれています。", $response->VE["test"]);
         }
     }
     
@@ -107,6 +119,7 @@ class VALIDATOR_Test extends TestCase
      */
     public function test_do_int()
     {
+        $response       = $this->get_response();
         $key        = "test";
         $conditions = [
             "type" => "int", "min" => PHP_INT_MIN, "max" => PHP_INT_MAX, 
@@ -116,24 +129,24 @@ class VALIDATOR_Test extends TestCase
         $type   = $conditions["type"];
         //
         $value  = "1234567890";
-        $result = VALIDATOR::do($this->ume, $value, $key, $conditions, $this->response);
+        $result = VALIDATOR::do($this->ume, $value, $key, $conditions, $response);
         $this->assertSame(true, $result);
         //
         $value  = "-1234567890";
-        $result = VALIDATOR::do($this->ume, $value, $key, $conditions, $this->response);
+        $result = VALIDATOR::do($this->ume, $value, $key, $conditions, $response);
         $this->assertSame(true, $result);
         //
         $value  = "あいうえおー漢字－１２３４５６７８９０ＡＢＣＤＥＦＧｈｉｊｋｌｍｎ<script>alert(\"XSS!\");@＠ABC12345=！＃＄％＆（）－＝「」＊!#$%&()=[]*";
         $expect ="あいうえお-漢字-1234567890ＡＢＣＤＥＦＧｈｉｊｋｌｍｎ<script>alert(\"XSS!\");@＠ABC12345=！＃＄％＆（）-＝「」＊!#$%&()=[]*";
-        $result = VALIDATOR::do($this->ume, $value, $key, $conditions, $this->response);
+        $result = VALIDATOR::do($this->ume, $value, $key, $conditions, $response);
         $this->assertSame(false, $result);
         //
         $failcases  = ["１２３４５６７８９０", "-0123456789", "1,234,567,890", "1234-567890", "Ā", "ɑ", "#", "@", "Ⅲ", "⑤", "七"];
         foreach($failcases as $value)
         {
-            $result = VALIDATOR::do($this->ume, $value, $key, $conditions, $this->response);
+            $result = VALIDATOR::do($this->ume, $value, $key, $conditions, $response);
             $this->assertSame(false, $result);
-            $this->assertSame("[テスト] は整数でなければなりません。", $this->response->VE["test"]);
+            $this->assertSame("[テスト] は整数でなければなりません。", $response->VE["test"]);
         }
     }
     
@@ -142,6 +155,7 @@ class VALIDATOR_Test extends TestCase
      */
     public function test_do_rule_exception()
     {
+        $response       = $this->get_response();
         $key        = "test";
         $conditions = [
             "type" => "wrong_rule", "min" => PHP_INT_MIN, "max" => PHP_INT_MAX, 
@@ -155,7 +169,7 @@ class VALIDATOR_Test extends TestCase
         $this->expectException(UMEException::class);
         $this->expectExceptionMessage("バリデーション定義 [{$conditions["type"]}] の rule は正しい callable として定義されていません。");
         //
-        $result = VALIDATOR::do($this->ume, $value, $key, $conditions, $this->response);
+        $result = VALIDATOR::do($this->ume, $value, $key, $conditions, $response);
     }
     
     /**
@@ -163,6 +177,7 @@ class VALIDATOR_Test extends TestCase
      */
     public function test_do_return_exception()
     {
+        $response       = $this->get_response();
         $key        = "test";
         $conditions = [
             "type" => "wrong_return", "min" => PHP_INT_MIN, "max" => PHP_INT_MAX, 
@@ -176,7 +191,7 @@ class VALIDATOR_Test extends TestCase
         $this->expectException(UMEException::class);
         $this->expectExceptionMessage("バリデーション定義 [{$conditions["type"]}] の rule の返り値が bool 型ではありません。[type: {$data_type}]");
         //
-        $result = VALIDATOR::do($this->ume, $value, $key, $conditions, $this->response);
+        $result = VALIDATOR::do($this->ume, $value, $key, $conditions, $response);
     }
     
     
@@ -185,6 +200,7 @@ class VALIDATOR_Test extends TestCase
      */
     public function test_do_error_exception()
     {
+        $response       = $this->get_response();
         $key        = "test";
         $conditions = [
             "type" => "wrong_error", "min" => PHP_INT_MIN, "max" => PHP_INT_MAX, 
@@ -198,7 +214,7 @@ class VALIDATOR_Test extends TestCase
         $this->expectException(UMEException::class);
         $this->expectExceptionMessage("バリデーション定義 [{$type}] の error は正しい callable　として定義されていません。");
         //
-        $result = VALIDATOR::do($this->ume, $value, $key, $conditions, $this->response);
+        $result = VALIDATOR::do($this->ume, $value, $key, $conditions, $response);
     }
     
 }

@@ -33,7 +33,7 @@ class VALIDATE
         $temp                   = DATASOURCE::get($conditions["method"], $key);
         $response->src[$key]    = $temp;
         
-        $response->dist[$key]   = INDIVIDUAL::validate($this, $src, $key, $conditions, $response);
+        $response->dist[$key]   = INDIVIDUAL::validate($ume, $temp, $key, $conditions, $response);
     }
     
     private static function hierarchy(UME $ume, string $prefix, array $conditions, \stdClass $response)

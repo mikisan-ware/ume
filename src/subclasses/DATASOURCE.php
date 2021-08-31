@@ -19,7 +19,7 @@ use \mikisan\core\util\mime\MIME;
 class DATASOURCE
 {
     
-        public static function all(string $target_method)
+    public static function all(string $target_method)
     {
         $method = strtoupper($target_method);
         

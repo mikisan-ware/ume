@@ -36,14 +36,25 @@ class CHOICE_Test extends TestCase
         $this->ume      = new ChildUME();
     }
     
+    private function get_response(): \stdClass
+    {
+        $response               = new \stdClass();
+        $response->has_error    = false;
+        $response->on_error     = false;
+        $response->VE           = [];
+        $response->offset       = [];
+        $response->src          = [];
+        $response->dist         = [];
+        $response->index        = "";
+        return $response;
+    }
+    
     /**
      * choiceが | 区切りのstringの場合の通常パラメータのテスト
      */
     public function test_isInListValue_string()
     {
-        $response       = new \stdClass();
-        $response->VE   = [];
-        $response->src  = [];
+        $response       = $this->get_response();
         $key            = "test";
         $conditions     = [
             "type" => "text", "min" => PHP_INT_MIN, "max" => PHP_INT_MAX, "choice" => "abc|def|ghi",
@@ -61,9 +72,7 @@ class CHOICE_Test extends TestCase
      */
     public function test_isInListValue_array()
     {
-        $response       = new \stdClass();
-        $response->VE   = [];
-        $response->src  = [];
+        $response       = $this->get_response();
         $key            = "test";
         $conditions     = [
             "type" => "text", "min" => PHP_INT_MIN, "max" => PHP_INT_MAX, "choice" => ["abc", "def", "ghi"],
@@ -81,9 +90,7 @@ class CHOICE_Test extends TestCase
      */
     public function test_do_ummatch()
     {
-        $response       = new \stdClass();
-        $response->VE   = [];
-        $response->src  = [];
+        $response       = $this->get_response();
         $key            = "test";
         $conditions     = [
             "type" => "text", "min" => PHP_INT_MIN, "max" => PHP_INT_MAX, "choice" => "abc|def|ghi",
@@ -105,9 +112,7 @@ class CHOICE_Test extends TestCase
      */
     public function test_isInListValue_int_array()
     {
-        $response       = new \stdClass();
-        $response->VE   = [];
-        $response->src  = [];
+        $response       = $this->get_response();
         $key            = "test";
         $conditions     = [
             "type" => "text", "min" => PHP_INT_MIN, "max" => PHP_INT_MAX, "choice" => [1, 2, 3],
@@ -125,9 +130,7 @@ class CHOICE_Test extends TestCase
      */
     public function test_disInListValue_exception()
     {
-        $response       = new \stdClass();
-        $response->VE   = [];
-        $response->src  = [];
+        $response       = $this->get_response();
         $key            = "test";
         $conditions     = [
             "type" => "text", "min" => PHP_INT_MIN, "max" => PHP_INT_MAX, "choice" => 123,
@@ -149,9 +152,7 @@ class CHOICE_Test extends TestCase
      */
     public function test_isInListFileType_string()
     {
-        $response       = new \stdClass();
-        $response->VE   = [];
-        $response->src  = [];
+        $response       = $this->get_response();
         $key            = "test";
         $conditions     = [
             "type" => "text", "min" => PHP_INT_MIN, "max" => PHP_INT_MAX, "choice" => "jpg|png|gif",
@@ -175,9 +176,7 @@ class CHOICE_Test extends TestCase
      */
     public function test_isInListFileType_array()
     {
-        $response       = new \stdClass();
-        $response->VE   = [];
-        $response->src  = [];
+        $response       = $this->get_response();
         $key            = "test";
         $conditions     = [
             "type" => "text", "min" => PHP_INT_MIN, "max" => PHP_INT_MAX, "choice" => ["jpg", "png", "gif"],
@@ -201,9 +200,7 @@ class CHOICE_Test extends TestCase
      */
     public function test_isInListFileType_unmatch()
     {
-        $response       = new \stdClass();
-        $response->VE   = [];
-        $response->src  = [];
+        $response       = $this->get_response();
         $key            = "test";
         $conditions     = [
             "type" => "text", "min" => PHP_INT_MIN, "max" => PHP_INT_MAX, "choice" => "jpg|png|gif",
@@ -231,9 +228,7 @@ class CHOICE_Test extends TestCase
      */
     public function test_isInListFileType_null()
     {
-        $response       = new \stdClass();
-        $response->VE   = [];
-        $response->src  = [];
+        $response       = $this->get_response();
         $key            = "test";
         $conditions     = [
             "type" => "text", "min" => PHP_INT_MIN, "max" => PHP_INT_MAX, "choice" => null,

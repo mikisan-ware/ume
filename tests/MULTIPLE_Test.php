@@ -49,6 +49,7 @@ class MULTIPLE_Test extends TestCase
         $response->offset       = [];
         $response->src          = [];
         $response->dist         = [];
+        $response->index        = "";
         return $response;
     }
     

@@ -74,23 +74,23 @@ class DATASOURCE_Test extends TestCase
     
     public function test_get_post()
     {
-        $this->assertSame("abc", DATASOURCE::get($this->ume, UME::POST, "param1"));
-        $this->assertSame("123", DATASOURCE::get($this->ume, UME::POST, "param2"));
-        $this->assertSame(null, DATASOURCE::get($this->ume, UME::POST, "param3"));
+        $this->assertSame("abc", DATASOURCE::get(UME::POST, "param1"));
+        $this->assertSame("123", DATASOURCE::get(UME::POST, "param2"));
+        $this->assertSame(null, DATASOURCE::get(UME::POST, "param3"));
     }
     
     public function test_get_get()
     {
-        $this->assertSame("def", DATASOURCE::get($this->ume, UME::GET, "param1"));
-        $this->assertSame("456", DATASOURCE::get($this->ume, UME::GET, "param2"));
-        $this->assertSame(null, DATASOURCE::get($this->ume, UME::GET, "param3"));
+        $this->assertSame("def", DATASOURCE::get(UME::GET, "param1"));
+        $this->assertSame("456", DATASOURCE::get(UME::GET, "param2"));
+        $this->assertSame(null, DATASOURCE::get(UME::GET, "param3"));
     }
     
     public function test_get_cookie()
     {
-        $this->assertSame("ghi", DATASOURCE::get($this->ume, UME::COOKIE, "param1"));
-        $this->assertSame("789", DATASOURCE::get($this->ume, UME::COOKIE, "param2"));
-        $this->assertSame(null, DATASOURCE::get($this->ume, UME::COOKIE, "param3"));
+        $this->assertSame("ghi", DATASOURCE::get(UME::COOKIE, "param1"));
+        $this->assertSame("789", DATASOURCE::get(UME::COOKIE, "param2"));
+        $this->assertSame(null, DATASOURCE::get(UME::COOKIE, "param3"));
     }
     
     public function test_get_restful()
@@ -101,9 +101,9 @@ class DATASOURCE_Test extends TestCase
         $_SERVER["REQUEST_URI"]     = "/admin/service/master/357/register/246";
         Router::resolve($yml_path);
         
-        $this->assertSame("357", DATASOURCE::get($this->ume, UME::RESTful, "id"));
-        $this->assertSame("246", DATASOURCE::get($this->ume, UME::RESTful, "num"));
-        $this->assertSame(null, DATASOURCE::get($this->ume, UME::RESTful, "param1"));
+        $this->assertSame("357", DATASOURCE::get(UME::RESTful, "id"));
+        $this->assertSame("246", DATASOURCE::get(UME::RESTful, "num"));
+        $this->assertSame(null, DATASOURCE::get(UME::RESTful, "param1"));
     }
     
     public function test_get_args()
@@ -114,15 +114,15 @@ class DATASOURCE_Test extends TestCase
         $_SERVER["REQUEST_URI"]     = "/admin/service/show/abcd/efgh/987";
         Router::resolve($yml_path);
         
-        $this->assertSame("abcd", DATASOURCE::get($this->ume, UME::ARGS, 0));
-        $this->assertSame("efgh", DATASOURCE::get($this->ume, UME::ARGS, 1));
-        $this->assertSame("987", DATASOURCE::get($this->ume, UME::ARGS, 2));
-        $this->assertSame(null, DATASOURCE::get($this->ume, UME::ARGS, 3));
+        $this->assertSame("abcd", DATASOURCE::get(UME::ARGS, 0));
+        $this->assertSame("efgh", DATASOURCE::get(UME::ARGS, 1));
+        $this->assertSame("987", DATASOURCE::get(UME::ARGS, 2));
+        $this->assertSame(null, DATASOURCE::get(UME::ARGS, 3));
     }
     
     public function test_get_files_single()
     {
-        $files  = DATASOURCE::get($this->ume, UME::FILES, "param1");
+        $files  = DATASOURCE::get( UME::FILES, "param1");
         //
         $this->assertSame("MyFile.txt", $files["name"]);
         $this->assertSame("text/plain", $files["type"]);
@@ -133,7 +133,7 @@ class DATASOURCE_Test extends TestCase
     
     public function test_get_files_multiple()
     {
-        $files  = DATASOURCE::get($this->ume, UME::FILES, "param2");
+        $files  = DATASOURCE::get(UME::FILES, "param2");
         $this->assertCount(2, $files);
         //
         $this->assertSame("MyFile.txt", $files[0]["name"]);
@@ -155,7 +155,7 @@ class DATASOURCE_Test extends TestCase
         $target_method  = "undefined";
         $this->expectException(UMEException::class);
         $this->expectExceptionMessage("バリデーション設定内に記述された、キー [{$key}] の method [{$target_method}] は定義されていません。");
-        DATASOURCE::get($this->ume, $target_method, $key);
+        DATASOURCE::get($target_method, $key);
     }
     
 }

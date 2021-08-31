@@ -13,6 +13,7 @@ declare(strict_types=1);
 use \mikisan\core\util\autoload\Autoload;
 use \PHPUnit\Framework\TestCase;
 use \mikisan\core\basis\ume\VALIDATE;
+use \mikisan\core\exception\UMEException;
 //
 use \mikisan\core\basis\ume\UME;
 use \mikisan\pine\app\ChildUME;
@@ -69,7 +70,7 @@ class VALIDATE_Test extends TestCase
         $this->assertSame(5, $result[1]);
     }
     
-    public function test_do()
+    public function test_do_hierarchy_get()
     {
         $_GET["param_1_2_3"]    = "hoge";
         $_GET["param_1_2_4"]    = "hage";
@@ -96,7 +97,7 @@ class VALIDATE_Test extends TestCase
         $this->assertSame("def", $response->dist[$prefix][1][3][7]);
     }
     
-    public function test_do_with_validateion_error()
+    public function test_do_hierarchy_get_with_validateion_error()
     {
         $_GET["param_1_2_3"]    = "1234";
         $_GET["param_1_2_4"]    = "５６７８";
@@ -125,6 +126,82 @@ class VALIDATE_Test extends TestCase
         $this->assertCount(2, $response->VE[$prefix]);
         $this->assertSame("[データ値:1:3:1] は整数でなければなりません。", $response->VE[$prefix][0]);
         $this->assertSame("[データ値:1:3:7] は整数でなければなりません。", $response->VE[$prefix][1]);
+    }
+    
+    public function test_do_hierarchy_get_with_illegal_method()
+    {
+        $_GET["param_1_2_3"]    = "1234";
+        $_GET["param_1_2_4"]    = "５６７８";
+        $_GET["param_1_3_1"]    = "abc";
+        $_GET["param_1_3_7"]    = "九〇一二";
+        $key                    = "param_%_%_%";
+        $matches    = [];
+        preg_match("/\A([^%]+)_(%_)*%(\[\])?\z/u", $key, $matches);
+        $prefix                 = $matches[1];
+        $conditions = [
+            "type" => "int", "min" => PHP_INT_MIN, "max" => PHP_INT_MAX,
+            "auto_correct" => true, "filter" => null, "trim" => UME::TRIM_ALL, "null_byte" => false,
+            "method" => UME::PATCH, "require" => true
+        ];
+        $response   = $this->get_response();
+        //
+        $this->expectException(UMEException::class);
+        $this->expectExceptionMessage("バリデーション設定内に記述された、キー [{$prefix}] の method [{$conditions["method"]}] は定義されていません。");
+        VALIDATE::do($this->ume, $key, $conditions, $response);
+    }
+    
+    public function test_do_hierarchy_post()
+    {
+        $_POST["param_1_2_3"]    = "hoge";
+        $_POST["param_1_2_4"]    = "hage";
+        $_POST["param_1_3_1"]    = "abc";
+        $_POST["param_1_3_7"]    = "def";
+        $key                    = "param_%_%_%";
+        $matches    = [];
+        preg_match("/\A([^%]+)_(%_)*%(\[\])?\z/u", $key, $matches);
+        $prefix                 = $matches[1];
+        $conditions = [
+            "type" => "text", "min" => PHP_INT_MIN, "max" => PHP_INT_MAX,
+            "auto_correct" => true, "filter" => null, "trim" => UME::TRIM_ALL, "null_byte" => false,
+            "method" => UME::POST, "require" => true
+        ];
+        $response   = $this->get_response();
+        //
+        VALIDATE::do($this->ume, $key, $conditions, $response);
+        $this->assertCount(1, $response->dist[$prefix]);
+        $this->assertSame(false, $response->has_error);
+        //
+        $this->assertSame("hoge", $response->dist[$prefix][1][2][3]);
+        $this->assertSame("hage", $response->dist[$prefix][1][2][4]);
+        $this->assertSame("abc", $response->dist[$prefix][1][3][1]);
+        $this->assertSame("def", $response->dist[$prefix][1][3][7]);
+    }
+    
+    public function test_do_hierarchy_cookie()
+    {
+        $_COOKIE["param_1_2_3"]    = "hoge";
+        $_COOKIE["param_1_2_4"]    = "hage";
+        $_COOKIE["param_1_3_1"]    = "abc";
+        $_COOKIE["param_1_3_7"]    = "def";
+        $key                    = "param_%_%_%";
+        $matches    = [];
+        preg_match("/\A([^%]+)_(%_)*%(\[\])?\z/u", $key, $matches);
+        $prefix                 = $matches[1];
+        $conditions = [
+            "type" => "text", "min" => PHP_INT_MIN, "max" => PHP_INT_MAX,
+            "auto_correct" => true, "filter" => null, "trim" => UME::TRIM_ALL, "null_byte" => false,
+            "method" => UME::COOKIE, "require" => true
+        ];
+        $response   = $this->get_response();
+        //
+        VALIDATE::do($this->ume, $key, $conditions, $response);
+        $this->assertCount(1, $response->dist[$prefix]);
+        $this->assertSame(false, $response->has_error);
+        //
+        $this->assertSame("hoge", $response->dist[$prefix][1][2][3]);
+        $this->assertSame("hage", $response->dist[$prefix][1][2][4]);
+        $this->assertSame("abc", $response->dist[$prefix][1][3][1]);
+        $this->assertSame("def", $response->dist[$prefix][1][3][7]);
     }
     
 }

@@ -39,7 +39,7 @@ class VALIDATE
     private static function hierarchy(UME $ume, string $prefix, array $conditions, \stdClass $response)
     {
         $result     = [];
-        $all_data   = DATASOURCE::all($conditions["method"]);    // 指定されたmethodでのリクエストを全て取得
+        $all_data   = DATASOURCE::all($conditions["method"], $prefix);    // 指定されたmethodでのリクエストを全て取得
         //$response->src[$key]    = $temp;
         $VE         = [];
 

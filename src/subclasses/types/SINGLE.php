@@ -25,19 +25,32 @@ class SINGLE
      * @param   string      $type
      * @param   string      $key
      * @param   array       $conditions
-     * @param   \stdClass   $response
+     * @param   \stdClass   $resobj
      * @return  mixed
      * @throws  UMEException
      */
-    public static function validate(UME $ume, $src, string $key, array $conditions, \stdClass $response)
+    public static function validate(UME $ume, $src, string $key, array $conditions, \stdClass $resobj)
     {
-        $response->on_error     = false;
+        $resobj->on_error     = false;
+        
+        // 必須チェック
+        if(!REQUIREMENT::should_validate($ume, $src, $key, $conditions, $resobj))
+        {
+            if($resobj->on_error)   { $resobj->has_error = true; }
+            return ($resobj->has_error) ? null : $src ;
+        }
         
         // バリデート
-        return ($conditions["method"] === UME::FILES)
-                    ? FILE ::validate($ume, $src, $key, $conditions, $response)
-                    : VALUE::validate($ume, $src, $key, $conditions, $response)
-                    ;
+        $result =  ($conditions["method"] === UME::FILES)
+                        ? FILE ::validate($ume, $src, $key, $conditions, $resobj)
+                        : VALUE::validate($ume, $src, $key, $conditions, $resobj)
+                        ;
+        if($resobj->on_error)
+        {
+            $resobj->has_error  = true;
+        }
+        
+        return $result;
     }
     
 }

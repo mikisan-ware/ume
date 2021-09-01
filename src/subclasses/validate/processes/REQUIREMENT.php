@@ -26,26 +26,35 @@ class REQUIREMENT
      * @param   mixed       $value
      * @param   string      $key
      * @param   array       $conditions
-     * @param   \stdClass   $response
+     * @param   \stdClass   $result
      * @return  bool        バリデーションを行うか？のフラグ
      */
-    public static function should_validate(UME $ume, $value, string $key, array $conditions, \stdClass $response): bool
+    public static function should_validate(UME $ume, $value, string $key, array $conditions, \stdClass $result): bool
     {
-        return  (!EX::empty($value))
-                    ? true
-                    : self::case_empty_value($ume, $value, $key, $conditions, $response)
+        if  (!EX::empty($value))    { return true; }
+        
+        return (bool)((int)$conditions["require"] & 0b0001)
+                    ? self::fail($ume, $key, $result)
+                    : false
                     ;
     }
     
     /**
-     * 必須入力項目か？ 必須項目が入力されたか？
+     * 必須設定での分岐
      * 
+     * @param   UME         $ume
+     * @param   mixed       $value
+     * @param   string      $key
+     * @param   array       $conditions
+     * @param   \stdClass   $result
      * @return  bool        バリデーションを行うか？のフラグ
      */
-    private static function case_empty_value(UME $ume, $value, string $key, array $conditions, \stdClass $response): bool
+    public static function should_force_validate(UME $ume, $value, string $key, array $conditions, \stdClass $result): bool
     {
-        return ($conditions["require"] !== false)
-                    ? self::fail($ume, $key, $response)
+        if  (!EX::empty($value))    { return true; }
+        
+        return (bool)((int)$conditions["require"] & 0b0010)
+                    ? self::fail($ume, $key, $result)
                     : false
                     ;
     }
@@ -56,15 +65,14 @@ class REQUIREMENT
      * @param UME $ume
      * @param string $value
      * @param string $key
-     * @param \stdClass $response
+     * @param \stdClass $result
      * @return bool
      */
-    public static function fail(UME $ume, string $key, \stdClass $response): bool
+    public static function fail(UME $ume, string $key, \stdClass $result): bool
     {
-        $label  = SELECTOR::getLabel($ume, $key, $response);
-        $response->VE[$key]     = "[$label] は必須項目です。";
-        $response->has_error    = true;
-        $response->on_error     = true;
+        $label  = SELECTOR::getLabel($ume, $key, $result);
+        $result->VE[]       = "[$label] は必須項目です。";
+        $result->on_error   = true;
 
         return false;
     }

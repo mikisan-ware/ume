@@ -27,13 +27,21 @@ class MULTIPLE
      * @param   string      $type
      * @param   string      $key
      * @param   array       $conditions
-     * @param   \stdClass   $response
+     * @param   \stdClass   $resobj
      * @return  mixed
      * @throws  UMEException
      */
-    public static function validate(UME $ume, $data, string $key, array $conditions, \stdClass $response)
+    public static function validate(UME $ume, $data, string $key, array $conditions, \stdClass $resobj)
     {
         $result = [];
+        
+        // 必須チェック
+        if(!REQUIREMENT::should_validate($ume, $data, $key, $conditions, $resobj))
+        {
+            if($resobj->on_error)   { $resobj->has_error = true; }
+            return ($resobj->has_error) ? null : $result;
+        }
+        
         if(!is_array($data))
         {
             $data_type  = gettype($data);
@@ -43,114 +51,21 @@ class MULTIPLE
         $i = 0;
         foreach($data as $src)
         {
-            $response->on_error     = false;
+            $resobj->on_error     = false;
             
             // バリデート
             $result[]   = ($conditions["method"] === UME::FILES)
-                                ? FILE ::validate($ume, $src, $key, $conditions, $response)
-                                : VALUE::validate($ume, $src, $key, $conditions, $response)
+                                ? FILE ::validate($ume, $src, $key, $conditions, $resobj)
+                                : VALUE::validate($ume, $src, $key, $conditions, $resobj)
                                 ;
-            if($response->on_error)
+            if($resobj->on_error)
             {
-                if(!isset($response->offset[$key]))  { $response->offset[$key] = []; }
-                $response->offset[$key][] = $i;
+                $resobj->has_error  = true;
+                $resobj->offset[]   = $i;
             }
             $i++;
         }
         return $result;
     }
     
-    /**
-     * 配列項目のバリデート
-     * 
-     * @param   UME         $ume
-     * @param   mixed       $src
-     * @param   string      $type
-     * @param   string      $key
-     * @param   array       $conditions
-     * @param   \stdClass   $response
-     * @return  void
-     * @throws  UMEException
-     *
-    public static function validate(UME $ume, $src, string $type, string $key, array $conditions, \stdClass $response) : array
-    {
-        // リクエスト取得
-        $src            = DATASOURCE::get($conditions["method"], $key);
-        $response->src["key"]   = $src;
-        
-        // バリデート
-        switch(true)
-        {
-            case $conditions["method"] === UME::DATASET:
-                
-                $values = $src;
-                $i      = 0;
-                foreach($values as &$data)
-                {
-                    $i++;
-                    $data[$key]         = self::do($ume, $data[$key], $type, $key, $conditions, $response);
-                }
-                unset($data);
-
-            default:
-                
-                $values = self::do($ume, $src, $type, $key, $conditions, $response);
-        }
-
-        return $values;
-    }
-    
-    private static function do(UME $ume, $src, string $type, string $key, array $conditions, \stdClass $response)
-    {
-        $labels     = $ume->get_labels();
-        $label      = $labels["ja_JP"][$key] ?? $key;
-        
-        // 必須チェック
-        if(!self::has_values($ume, $src, $label, $key, $conditions, $response)) { return null; }
-        
-        $values = $src;
-        
-        // 配列要素毎のバリデート
-        $i = 0;
-        foreach($values as $idx => &$value)
-        {
-            $i++;
-            $value      = ($conditions["method"] === UME::FILES)
-                                ? FILE ::validate($ume, $value, $type, $key, $conditions, $response)
-                                : VALUE::validate($ume, $value, $type, $key, $conditions, $response)
-                                ;
-        }
-        unset($value);
-        
-        return $values;
-    }
-    
-    /**
-     * タイプチェックを行い、配列として返す
-     * 
-     * @param   UME     $ume
-     * @param   mixed   $src
-     * @param   string  $label
-     * @param   string  $key
-     * @return  array
-     * @throws  UMEException
-     *
-    private static function has_values(UME $ume, $src, string $label, string $key, array $conditions, \stdClass $response): bool
-    {
-        if(!is_array($src))
-        {
-            $data_type  = gettype($src);
-            throw new UMEException("[{$label}] でリクエストされた入力値が配列ではありません。[type: {$data_type}]");
-        }
-        if($conditions["require"] === true && EX::empty($src))
-        {
-            $response->VE[$key]     = "[$label] は必須項目です。";
-            $response->has_error    = true;
-            
-            return false;
-        }
-        
-        return true;
-    }
-    */
 }

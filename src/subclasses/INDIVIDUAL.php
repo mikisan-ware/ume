@@ -24,20 +24,20 @@ class INDIVIDUAL
      * @param   mixed       $src
      * @param   mixed       $key            string|int(index)
      * @param   array       $conditions
-     * @param   \stdClass   $response
+     * @param   \stdClass   $resobj
      * @return  mixed
      */
-    public static function validate(UME $ume, $src, $key, array $conditions, \stdClass $response)
+    public static function validate(UME $ume, $src, $key, array $conditions, \stdClass $resobj)
     {
         switch(true)
         {
             case preg_match("|\A.+\[\]\z|u", $key):
 
-                return MULTIPLE::validate($ume, $src, $key, $conditions, $response);       // 配列項目のバリデート
+                return MULTIPLE::validate($ume, $src, $key, $conditions, $resobj);      // 配列項目のバリデート
 
             default:
                 
-                return SINGLE::validate($ume, $src, $key, $conditions, $response);         // 単一項目のバリデート
+                return SINGLE::validate($ume, $src, $key, $conditions, $resobj);        // 単一項目のバリデート
         }
     }
     

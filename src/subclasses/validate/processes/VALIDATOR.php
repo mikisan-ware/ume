@@ -20,7 +20,7 @@ use \mikisan\core\util\ex\EX;
 class VALIDATOR
 {
     
-    public static function do(UME $ume, string $value, string $key, array $conditions, \stdClass $response): bool
+    public static function do(UME $ume, string $value, string $key, array $conditions, \stdClass $resobj): bool
     {
         $type   = $conditions["type"];
         $types  = $ume->getTypes()[$type];
@@ -47,10 +47,9 @@ class VALIDATOR
         }
         
         // バリデーションエラーメッセージ
-        $label  = SELECTOR::getLabel($ume, $key, $response);
-        $response->VE[$key]     = $types["error"]($label, $conditions);
-        $response->has_error    = true;
-        $response->on_error     = true;
+        $label              = SELECTOR::getLabel($ume, $key, $resobj);
+        $resobj->VE[]       = $types["error"]($label, $conditions);
+        $resobj->on_error   = true;
         
         return false;
     }

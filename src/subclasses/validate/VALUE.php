@@ -26,50 +26,39 @@ class VALUE
      * @param   mixed       $value
      * @param   string      $key
      * @param   array       $conditions
-     * @param   \stdClass   $response
+     * @param   \stdClass   $resobj
      * @return  mixed
      */
-    public static function validate(UME $ume, $value, string $key, array $conditions, \stdClass $response)
+    public static function validate(UME $ume, $value, string $key, array $conditions, \stdClass $resobj)
     {
         // 事前処理：事前フィルタ適用、オートコレクト、NULLバイト除去、トリム
         $value  = self::prepare($ume, $value, $conditions);
         
         // バリデーション処理
-        if(REQUIREMENT::should_validate($ume, $value, $key, $conditions, $response))
+        if(!REQUIREMENT::should_force_validate($ume, $value, $key, $conditions, $resobj))
         {
-            // バリデーション処理
-            $result = VALIDATOR::do($ume, $value, $key, $conditions, $response);
-            
-            if(!$result)    { return null; }
-
-            // 値確定処理：タイプキャスト、事後フィルタ
-            $value  = self::conclude($ume, $value, $conditions);
-
-            // 許容範囲チェック
-            $is_in_range    = (isset($conditions["choice"]))
-                                    ? CHOICE::isInListValue ($ume, $value, $key, $conditions, $response)
-                                    : RANGE ::isInRange     ($ume, $value, $key, $conditions, $response)
-                                    ;
+            return $value;
         }
         
-        return ($response->on_error) ? null : $value;
-    }
-    
-    /**
-     * エンコード補正
-     * 
-     * @param   UME     $ume
-     * @param   mixed   $temp
-     * @return  mixed
-     */
-    private static function unify_encoding(UME $ume, $temp)
-    { 
-        if(!is_string($temp))   { return $temp; }
+        // バリデーション処理
+        $result = VALIDATOR::do($ume, $value, $key, $conditions, $resobj);
+
+        // タイプキャスト
+        $value  = TYPECAST::do($ume->getTypes()[$conditions["type"]]["type"], $value);
+
+        // 許容範囲チェック
+        $is_in_range    = (isset($conditions["choice"]))
+                                ? CHOICE::isInListValue ($ume, $value, $key, $conditions, $resobj)
+                                : RANGE ::isInRange     ($ume, $value, $key, $conditions, $resobj)
+                                ;
+
+        if($result)
+        {
+            // 事後フィルタ
+            $value  = CLOSER::do($ume->getClosers(), $value, $conditions);
+        }
         
-        return (UMESettings::ENCODE !== $ume->getFromEncoding())
-                        ? mb_convert_encoding($temp, UMESettings::ENCODE, $ume->getFromEncoding())
-                        : $temp
-                        ;
+        return ($resobj->on_error) ? null : $value;
     }
     
     /**
@@ -107,25 +96,20 @@ class VALUE
     }
     
     /**
-     * 値確定処理
+     * エンコード補正
      * 
      * @param   UME     $ume
-     * @param   mixed   $value
-     * @param   string  $type
-     * @param   array   $conditions
+     * @param   mixed   $temp
      * @return  mixed
      */
-    private static function conclude(UME $ume, $value, array $conditions)
-    {
-        if(is_null($value)) { return null; }
-
-        // タイプキャスト
-        $value  = TYPECAST::do($ume->getTypes()[$conditions["type"]]["type"], $value);
-
-        // 事後フィルタ
-        $value  = CLOSER::do($ume->getClosers(), $value, $conditions);
+    private static function unify_encoding(UME $ume, $temp)
+    { 
+        if(!is_string($temp))   { return $temp; }
         
-        return $value;
+        return (UMESettings::ENCODE !== $ume->getFromEncoding())
+                        ? mb_convert_encoding($temp, UMESettings::ENCODE, $ume->getFromEncoding())
+                        : $temp
+                        ;
     }
     
 }

@@ -25,6 +25,8 @@ interface UME
             TRIM_R = 2, TRIM_RIGHT = 2, 
             TIMR_A = true, TRIM_ALL = true;
     
+    const   NOT_REQUIRED = 0b0000, REQUIRED = 0b0001, FORCE_REQUIRED = 0b0011;
+    
     const   Base64 = 0b0001, HTML = 0b0010;
     
     const   GET = "GET", POST = "POST", DELETE = "DELETE", PUT = "PUT", PATCH = "PATCH"; 
@@ -36,7 +38,7 @@ interface UME
     
     const   TYPE_STRING = 0, TYPE_INTEGER = 1, TYPE_REAL = 2, TYPE_FILE = 3;
     
-    const   DATA_SIMPLE = 0, DATA_MULTI = 1;
+    const   DATA_SIMPLE = 0, DATA_SET = 1;
 }
 
 abstract class BaseUME implements UME
@@ -120,6 +122,16 @@ abstract class BaseUME implements UME
      */
     protected function register_types(array $types): UME
     {
+        $present_keys   = array_keys($this->types);
+        $attempt_keys   = array_keys($types);
+        foreach($attempt_keys as $key)
+        {
+            if(in_array($key, $present_keys, true))
+            {
+                throw new UMEException("register_types() に与えられたタイプ {$key} は既に規定されています。");
+            }
+        }
+        
         $this->types = array_merge($this->types, $types);
         
         return $this;
@@ -138,6 +150,16 @@ abstract class BaseUME implements UME
      */
     protected function register_filters(array $filters): UME
     {
+        $present_keys   = array_keys($this->filters);
+        $attempt_keys   = array_keys($filters);
+        foreach($attempt_keys as $key)
+        {
+            if(in_array($key, $present_keys, true))
+            {
+                throw new UMEException("register_filters() に与えられたフィルタ {$key} は既に規定されています。");
+            }
+        }
+        
         $this->filters  = array_merge($this->filters, $filters);
         
         return $this;
@@ -156,6 +178,16 @@ abstract class BaseUME implements UME
      */
     protected function register_closers(array $closers): UME
     {
+        $present_keys   = array_keys($this->closers);
+        $attempt_keys   = array_keys($closers);
+        foreach($attempt_keys as $key)
+        {
+            if(in_array($key, $present_keys, true))
+            {
+                throw new UMEException("register_closers() に与えられた事後フィルタ {$key} は既に規定されています。");
+            }
+        }
+        
         $this->closers  = array_merge($this->closers, $closers);
         
         return $this;
@@ -174,6 +206,16 @@ abstract class BaseUME implements UME
      */
     protected function register_rules(array $rules): UME
     {
+        $present_keys   = array_keys($this->rules);
+        $attempt_keys   = array_keys($rules);
+        foreach($attempt_keys as $key)
+        {
+            if(in_array($key, $present_keys, true))
+            {
+                throw new UMEException("register_rules() に与えられたルール {$key} は既に規定されています。");
+            }
+        }
+        
         $this->rules = array_merge($this->rules, $rules);
         
         return $this;
@@ -192,6 +234,16 @@ abstract class BaseUME implements UME
      */
     protected function register_labels(array $labels): UME
     {
+        $present_keys   = array_keys($this->labels);
+        $attempt_keys   = array_keys($labels);
+        foreach($attempt_keys as $key)
+        {
+            if(in_array($key, $present_keys, true))
+            {
+                throw new UMEException("register_labels() に与えられたラベル {$key} は既に規定されています。");
+            }
+        }
+        
         $this->labels = array_merge($this->labels, $labels);
         
         return $this;
@@ -242,12 +294,10 @@ abstract class BaseUME implements UME
     {
         $response               = new \stdClass();
         $response->has_error    = false;
-        $response->on_error     = false;
         $response->VE           = [];
         $response->offset       = [];
         $response->src          = [];
         $response->dist         = [];
-        $response->index        = "";
         
         return $response;
     }
@@ -268,21 +318,19 @@ abstract class BaseUME implements UME
      */
     private function fetch_dataset()
     {
-        $response_set   = $this->get_response_set(UME::DATA_MULTI);
+        $response_set   = $this->get_response_set(UME::DATA_SET);
         
         $i = 0;
         foreach($this->dataset as $row)
         {
             $response   = $this->get_response();
+            
             foreach($this->rules as $key => $conditions)
             {
-                $response->src[$key]    = $row[$key];
-                
-                // バリデートコンディションの正規化
-                $conditions             = $this->normarize_condition($conditions);
-                
-                // バリデーション
-                $response->dist[$key]   = INDIVIDUAL::validate($this, $row[$key], $key, $conditions, $response);
+                $matches    = [];
+                $prefix     = (preg_match("|\A(.+)\[\]\z|u", $key, $matches)) ? $matches[1] : $key ;
+        
+                VALIDATE::dataset($this, ($row[$prefix] ?? null), $prefix, $key, $this->normarize_condition($conditions), $response);
             }
             
             // バリデーション情報の統合
@@ -312,7 +360,7 @@ abstract class BaseUME implements UME
         
         foreach($this->rules as $key => $conditions)
         {
-            VALIDATE::do($this, $key, $this->normarize_condition($conditions), $response);
+            VALIDATE::normal($this, $key, $this->normarize_condition($conditions), $response);
         }
         
         // バリデーション情報の統合

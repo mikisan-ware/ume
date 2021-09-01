@@ -28,28 +28,28 @@ class RANGE
      * @param   mixed       $value
      * @param   string      $key
      * @param   array       $conditions
-     * @param   \stdClass   $response
+     * @param   \stdClass   $resobj
      * @return  bool        入力値が許容値内か？のフラグ
      */
-    public static function isInRange(UME $ume, $value, string $key, array $conditions, \stdClass $response): bool
+    public static function isInRange(UME $ume, $value, string $key, array $conditions, \stdClass $resobj): bool
     {
         $types  = $ume->getTypes();
         $type   = $types[$conditions["type"]]["type"];
-        $label  = SELECTOR::getLabel($ume, $key, $response);
+        $label  = SELECTOR::getLabel($ume, $key, $resobj);
         
         switch(true)
         {
-            case $type === UME::TYPE_INTEGER:   return self::type_integer($value, $key, $label, $conditions, $response);
-            case $type === UME::TYPE_REAL:      return self::type_real($value, $key, $label, $conditions, $response);
-            case $type === UME::TYPE_FILE:      return self::type_file($value, $key, $label, $conditions, $response);
+            case $type === UME::TYPE_INTEGER:   return self::type_integer($value, $key, $label, $conditions, $resobj);
+            case $type === UME::TYPE_REAL:      return self::type_real($value, $key, $label, $conditions, $resobj);
+            case $type === UME::TYPE_FILE:      return self::type_file($value, $key, $label, $conditions, $resobj);
                 
             case $type === UME::TYPE_STRING:    
             default:
-                return self::type_string($value, $key, $label, $conditions, $response);
+                return self::type_string($value, $key, $label, $conditions, $resobj);
         }
     }
     
-    private static function type_integer(int $value, string $key, string $label, array $conditions, \stdClass $response): bool
+    private static function type_integer(int $value, string $key, string $label, array $conditions, \stdClass $resobj): bool
     {
         $min    = (int)$conditions["min"] ?? 0;
         $max    = (int)$conditions["max"] ?? PHP_INT_MAX;
@@ -58,19 +58,18 @@ class RANGE
         
         if($value < $min)
         {
-            $response->VE[$key] = "[{$label}] は {$min} 以上の整数にしてください。";
+            $resobj->VE[]   = "[{$label}] は {$min} 以上の整数にしてください。";
         }
         if($value > $max)
         {
-            $response->VE[$key] = "[{$label}] は {$max} 以下の整数にしてください。";
+            $resobj->VE[]   = "[{$label}] は {$max} 以下の整数にしてください。";
         }
-        $response->has_error    = true;
-        $response->on_error     = true;
+        $resobj->on_error   = true;
         
         return false;
     }
     
-    private static function type_real(float $value, string $key, string $label, array $conditions, \stdClass $response): bool
+    private static function type_real(float $value, string $key, string $label, array $conditions, \stdClass $resobj): bool
     {
         $min    = (double)$conditions["min"] ?? 0;
         $max    = (double)$conditions["max"] ?? PHP_INT_MAX;
@@ -79,63 +78,59 @@ class RANGE
         
         if($value < $min)
         {
-            $response->VE[$key] = "[{$label}] は {$min} 以上の実数にしてください。";;
+            $resobj->VE[]   = "[{$label}] は {$min} 以上の実数にしてください。";
         }
         if($value > $max)
         {
-            $response->VE[$key] = "[{$label}] は {$max} 以下の実数にしてください。";;
+            $resobj->VE[]   = "[{$label}] は {$max} 以下の実数にしてください。";
         }
-        $response->has_error    = true;
-        $response->on_error     = true;
+        $resobj->on_error   = true;
         
         return false;
     }
     
-    private static function type_string(string $value, string $key, string $label, array $conditions, \stdClass $response): bool
+    private static function type_string(string $value, string $key, string $label, array $conditions, \stdClass $resobj): bool
     {
-        $min    = (double)$conditions["min"] ?? 0;
-        $max    = (double)$conditions["max"] ?? UMESettings::DEFAULT_MAX_STRING;
-        $len    = mb_strlen($value, "UTF-8");
+        $min    = (int)$conditions["min"] ?? 0;
+        $max    = (int)$conditions["max"] ?? UMESettings::DEFAULT_MAX_STRING;
+        $len    = mb_strlen($value, UMESettings::ENCODE);
         
         if($min <= $len && $len <= $max)    { return true; }
         
         if($len < $min)
         {
-            $response->VE[$key] = "[{$label}] は {$min} 文字以上にしてください。";;
+            $resobj->VE[]   = "[{$label}] は {$min} 文字以上にしてください。";
         }
         if($len > $max)
         {
-            $response->VE[$key] = "[{$label}] は {$max} 文字以下にしてください。";;
+            $resobj->VE[]   = "[{$label}] は {$max} 文字以下にしてください。";
         }
-        $response->has_error    = true;
-        $response->on_error     = true;
+        $resobj->on_error   = true;
         
         return false;
     }
     
-    private static function type_file(array $value, string $key, string $label, array $conditions, \stdClass $response): bool
+    private static function type_file(array $value, string $key, string $label, array $conditions, \stdClass $resobj): bool
     {
         $min        = $conditions["min"];
         $max        = $conditions["max"];
         $filesize   = $value["size"];
         
-        $allowed_min_size   = is_int($min) ? $min : self::get_actual_size($min, $label) ;
-        $allowed_max_size   = is_int($max) ? $max : self::get_actual_size($max, $label) ;
+        $allowed_min_size       = is_int($min) ? $min : self::get_actual_size($min, $label) ;
+        $allowed_max_size       = is_int($max) ? $max : self::get_actual_size($max, $label) ;
         
         if($filesize < $allowed_min_size)
         {
-            $min_limit  = is_int($min) ? "{$min} Bytes" : $min;
-            $response->VE[$key]     = "[{$label}] のファイルサイズが小さ過ぎます。許容されているファイルサイズは {$min_limit} です。";;
-            $response->has_error    = true;
-            $response->on_error     = true;
+            $min_limit          = is_int($min) ? "{$min} Bytes" : $min;
+            $resobj->VE[]       = "[{$label}] のファイルサイズが小さ過ぎます。許容されているファイルサイズは {$min_limit} です。";
+            $resobj->on_error   = true;
             return false;
         }
         if($filesize > $allowed_max_size)
         {
-            $max_limit              = is_int($max) ? "{$max} Bytes" : $max;
-            $response->VE[$key]     = "[{$label}] のファイルサイズが大き過ぎます。許容されているファイルサイズは {$max_limit} です。";;
-            $response->has_error    = true;
-            $response->on_error     = true;
+            $max_limit          = is_int($max) ? "{$max} Bytes" : $max;
+            $resobj->VE[]       = "[{$label}] のファイルサイズが大き過ぎます。許容されているファイルサイズは {$max_limit} です。";
+            $resobj->on_error   = true;
             return false;
         }
         

@@ -29,20 +29,19 @@ class CHOICE
      * @param   mixed       $value
      * @param   string      $key
      * @param   array       $conditions
-     * @param   \stdClass   $response
+     * @param   \stdClass   $resobj
      * @return  bool        入力値が choice で許可された値か？のフラグ
      */
-    public static function isInListValue(UME $ume, $value, string $key, array $conditions, \stdClass $response): bool
+    public static function isInListValue(UME $ume, $value, string $key, array $conditions, \stdClass $resobj): bool
     {
-        $label  = SELECTOR::getLabel($ume, $key, $response);
+        $label      = SELECTOR::getLabel($ume, $key, $resobj);
         $allowed    = self::get_allowed($conditions["choice"], $label);
         
         if(in_array($value, $allowed, true))   { return true; }
         
-        $note       = implode("|", $allowed);
-        $response->VE[$key]     = "[{$label}] の値は許可されていません。（許容値：{$note}）";
-        $response->has_error    = true;
-        $response->on_error     = true;
+        $note               = implode("|", $allowed);
+        $resobj->VE[]       = "[{$label}] の値は許可されていません。（許容値：{$note}）";
+        $resobj->on_error   = true;
         
         return false;
     }
@@ -54,13 +53,13 @@ class CHOICE
      * @param   mixed       $value
      * @param   string      $key
      * @param   array       $conditions
-     * @param   \stdClass   $response
+     * @param   \stdClass   $resobj
      * @return  bool
      * @throws  UMEException
      */
-    public static function isInListFileType(UME $ume, $value, string $key, array $conditions, \stdClass $response): bool
+    public static function isInListFileType(UME $ume, $value, string $key, array $conditions, \stdClass $resobj): bool
     {
-        $label  = SELECTOR::getLabel($ume, $key, $response);
+        $label      = SELECTOR::getLabel($ume, $key, $resobj);
         
         if(!isset($conditions["choice"]))
         {
@@ -74,10 +73,9 @@ class CHOICE
             if(in_array($ext, $allowed, true))   { return true; }
         }
         
-        $note       = implode("|", $allowed);
-        $response->VE[$key]     = "[{$label}] のファイルタイプは許可されていません。（許容値：{$note}）";
-        $response->has_error    = true;
-        $response->on_error     = true;
+        $note               = implode("|", $allowed);
+        $resobj->VE[]       = "[{$label}] のファイルタイプは許可されていません。（許容値：{$note}）";
+        $resobj->on_error   = true;
         
         return false;
     }

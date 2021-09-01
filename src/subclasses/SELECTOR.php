@@ -15,12 +15,12 @@ namespace mikisan\core\basis\ume;
 class SELECTOR
 {
     
-    public static function getLabel(UME $ume, string $key, \stdClass $response): string
+    public static function getLabel(UME $ume, string $key, \stdClass $resobj): string
     {
         $labels = $ume->getLabels();
         $label  = $labels["ja_JP"][$key] ?? $key;
         
-        return $label.$response->index;
+        return $label.$resobj->index;
     }
     
 }

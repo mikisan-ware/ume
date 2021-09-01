@@ -42,10 +42,11 @@ class ChildUME_Test extends TestCase
     public function test_getRules()
     {
         $rules          = $this->ume->getRules();
-        $this->assertCount(3, $rules);
+        $this->assertCount(4, $rules);
         $this->assertArrayHasKey("page", $rules);
         $this->assertArrayHasKey("test2", $rules);
         $this->assertArrayHasKey("test3", $rules);
+        $this->assertArrayHasKey("test[]", $rules);
     }
     
     public function test_validate_value()
@@ -76,7 +77,7 @@ class ChildUME_Test extends TestCase
         $this->assertSame(UME::DATA_SIMPLE, $result->type);
         //
         $this->assertSame(true, $result->has_error);
-        $this->assertSame("[$label] は必須項目です。", $result->info->error["page"]);
+        $this->assertSame("[$label] は必須項目です。", $result->info->error["page"][0]);
         $this->assertSame("", $result->info->src[$key]);
         $this->assertSame(null, $result->data[$key]);
     }
@@ -93,9 +94,31 @@ class ChildUME_Test extends TestCase
         $this->assertSame(UME::DATA_SIMPLE, $result->type);
         //
         $this->assertSame(true, $result->has_error);
-        $this->assertSame("[$label] は必須項目です。", $result->info->error["page"]);
+        $this->assertSame("[$label] は必須項目です。", $result->info->error["page"][0]);
         $this->assertSame(null, $result->info->src[$key]);
         $this->assertSame(null, $result->data[$key]);
+    }
+    
+    public function test_validate_array()
+    {
+        $key            = "test[]";
+        $prefix         = "test";
+        $_GET["page"]   = "12345";
+        $_GET[$prefix]  = ["123", "４５６", 789];
+        $labels         = $this->ume->getLabels();
+        $label          = $labels["ja_JP"][$key] ?? $key;
+        //
+        $result         = $this->ume->validate()->getResult();
+        //
+        $this->assertSame(UME::DATA_SIMPLE, $result->type);
+        //
+        $this->assertSame(false, $result->has_error);
+        $this->assertContains("123", $result->info->src[$prefix]);
+        $this->assertContains("４５６", $result->info->src[$prefix]);
+        $this->assertContains(789, $result->info->src[$prefix]);
+        $this->assertContains(123, $result->data[$prefix]);
+        $this->assertContains(456, $result->data[$prefix]);
+        $this->assertContains(789, $result->data[$prefix]);
     }
     
     public function test_validate_dataset()
@@ -112,7 +135,7 @@ class ChildUME_Test extends TestCase
         //
         $result     = $this->ume->validate()->getResult();
         //
-        $this->assertSame(UME::DATA_MULTI, $result->type);
+        $this->assertSame(UME::DATA_SET, $result->type);
         //
         $this->assertSame(false, $result->has_error);
     }
@@ -129,7 +152,7 @@ class ChildUME_Test extends TestCase
         //
         $result     = $this->ume->validate()->getResult();
         //
-        $this->assertSame(UME::DATA_MULTI, $result->type);
+        $this->assertSame(UME::DATA_SET, $result->type);
         //
         $this->assertSame(true, $result->has_error);
         $this->assertCount(0, $result->info[0]->error);
@@ -140,11 +163,11 @@ class ChildUME_Test extends TestCase
         $this->assertCount(2, $result->info[1]->error);
         $key        = "page";
         $label      = $labels["ja_JP"][$key] ?? $key;
-        $this->assertSame("[{$label}] は整数でなければなりません。", $result->info[1]->error[$key]);
+        $this->assertSame("[{$label}] は整数でなければなりません。", $result->info[1]->error[$key][0]);
         $this->assertSame("ｈｉｊｋｌｍｎ", $result->info[1]->src[$key]);
         $key        = "test2";
         $label      = $labels["ja_JP"][$key] ?? $key;
-        $this->assertSame("[{$label}] には英字以外が含まれています。", $result->info[1]->error[$key]);
+        $this->assertSame("[{$label}] には英字以外が含まれています。", $result->info[1]->error[$key][0]);
         $this->assertSame("４５６７８", $result->info[1]->src[$key]);
         $this->assertSame(null, $result->data[1]["page"]);
         $this->assertSame(null, $result->data[1]["test2"]);

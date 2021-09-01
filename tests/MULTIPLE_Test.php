@@ -21,6 +21,7 @@ use \mikisan\pine\app\ChildUME;
 require_once __DIR__ . "/../vendor/autoload.php";
 $project_root = realpath(__DIR__ . "/../../../../");
 require_once "{$project_root}/tests/TestCaseTrait.php";
+require_once __DIR__ . "/UMETestCaseTrait.php";
 
 Autoload::register(__DIR__ . "/../src", true);
 Autoload::register(__DIR__ . "/folder", true);
@@ -30,6 +31,7 @@ if(!defined("LIBRARY_DEBUG"))   { define("LIBRARY_DEBUG", true); }
 class MULTIPLE_Test extends TestCase
 {
     use TestCaseTrait;
+    use UMETestCaseTrait;
     
     protected   $ume;
     
@@ -40,19 +42,6 @@ class MULTIPLE_Test extends TestCase
         $this->ume              = new ChildUME();
     }
     
-    private function get_response(): \stdClass
-    {
-        $response               = new \stdClass();
-        $response->has_error    = false;
-        $response->on_error     = false;
-        $response->VE           = [];
-        $response->offset       = [];
-        $response->src          = [];
-        $response->dist         = [];
-        $response->index        = "";
-        return $response;
-    }
-    
     public function test_validate_not_array_passed()
     {
         $key        = "test[]";
@@ -61,13 +50,13 @@ class MULTIPLE_Test extends TestCase
             "auto_correct" => true, "filter" => null, "trim" => UME::TRIM_ALL, "null_byte" => false,
             "method" => UME::POST, "require" => true
         ];
-        $response   = $this->get_response();
+        $resobj   = $this->get_resobj();
         $src        = "１２３４５";
         //
         $this->expectException(UMEException::class);
         $this->expectExceptionMessage("バリデーションルール {$key} として渡された値が配列ではありません。[type: string]");
         //
-        $file = MULTIPLE::validate($this->ume, $src, $key, $conditions, $response);
+        $file = MULTIPLE::validate($this->ume, $src, $key, $conditions, $resobj);
     }
     
     
@@ -79,11 +68,11 @@ class MULTIPLE_Test extends TestCase
             "auto_correct" => true, "filter" => null, "trim" => UME::TRIM_ALL, "null_byte" => false,
             "method" => UME::POST, "require" => true
         ];
-        $response   = $this->get_response();
+        $resobj   = $this->get_resobj();
         $src        = ["１２３４５", "4567", "８９０123"];
         //
-        $file = MULTIPLE::validate($this->ume, $src, $key, $conditions, $response);
-        $this->assertSame(false, $response->has_error);
+        $file = MULTIPLE::validate($this->ume, $src, $key, $conditions, $resobj);
+        $this->assertSame(false, $resobj->on_error);
     }
     
     public function test_validate_regular_with_validation_error()
@@ -94,14 +83,14 @@ class MULTIPLE_Test extends TestCase
             "auto_correct" => true, "filter" => null, "trim" => UME::TRIM_ALL, "null_byte" => false,
             "method" => UME::POST, "require" => true
         ];
-        $response   = $this->get_response();
+        $resobj   = $this->get_resobj();
         $src        = ["１２３４５", "4567", "ＡＢＣＤＥＦＧ"];
         //
-        $file = MULTIPLE::validate($this->ume, $src, $key, $conditions, $response);
-        $this->assertSame(true, $response->has_error);
-        $this->assertSame("[テスト] は整数でなければなりません。", $response->VE[$key]);
-        $this->assertCount(1, $response->offset[$key]);
-        $this->assertContains(2, $response->offset[$key]);
+        $file = MULTIPLE::validate($this->ume, $src, $key, $conditions, $resobj);
+        $this->assertSame(true, $resobj->on_error);
+        $this->assertSame("[テスト] は整数でなければなりません。", $resobj->VE[0]);
+        $this->assertCount(1, $resobj->offset);
+        $this->assertContains(2, $resobj->offset);
     }
     
     public function test_validate_file()
@@ -112,7 +101,7 @@ class MULTIPLE_Test extends TestCase
             "auto_correct" => true, "filter" => null, "trim" => UME::TRIM_ALL, "null_byte" => false,
             "method" => UME::FILES, "require" => true
         ];
-        $response   = $this->get_response();
+        $resobj   = $this->get_resobj();
         $data               = [];
         //
         $file               = [];
@@ -137,9 +126,9 @@ class MULTIPLE_Test extends TestCase
         $label      = $labels["ja_JP"][$key] ?? $key;
         $note       = $conditions["choice"];
         //
-        $file = MULTIPLE::validate($this->ume, $data, $key, $conditions, $response);
-        $this->assertSame(false, $response->has_error);
-        $this->assertCount(0, $response->offset);
+        $file = MULTIPLE::validate($this->ume, $data, $key, $conditions, $resobj);
+        $this->assertSame(false, $resobj->on_error);
+        $this->assertCount(0, $resobj->offset);
     }
     
     public function test_validate_file_with_validation_error()
@@ -150,7 +139,7 @@ class MULTIPLE_Test extends TestCase
             "auto_correct" => true, "filter" => null, "trim" => UME::TRIM_ALL, "null_byte" => false,
             "method" => UME::FILES, "require" => true
         ];
-        $response   = $this->get_response();
+        $resobj   = $this->get_resobj();
         $data               = [];
         //
         $file               = [];
@@ -175,12 +164,13 @@ class MULTIPLE_Test extends TestCase
         $label      = $labels["ja_JP"][$key] ?? $key;
         $note       = $conditions["choice"];
         //
-        $file = MULTIPLE::validate($this->ume, $data, $key, $conditions, $response);
-        $this->assertSame(true, $response->has_error);
-        $this->assertSame("[{$label}] のファイルタイプは許可されていません。（許容値：{$note}）", $response->VE[$key]);
-        $this->assertCount(2, $response->offset[$key]);
-        $this->assertContains(0, $response->offset[$key]);
-        $this->assertContains(1, $response->offset[$key]);
+        $file = MULTIPLE::validate($this->ume, $data, $key, $conditions, $resobj);
+        $this->assertSame(true, $resobj->on_error);     
+        $this->assertSame("[{$label}] のファイルタイプは許可されていません。（許容値：{$note}）", $resobj->VE[0]);
+        $this->assertSame("[{$label}] のファイルタイプは許可されていません。（許容値：{$note}）", $resobj->VE[1]);
+        $this->assertCount(2, $resobj->offset);
+        $this->assertContains(0, $resobj->offset);
+        $this->assertContains(1, $resobj->offset);
     }
     
 }

@@ -19,6 +19,7 @@ use \mikisan\pine\app\ChildUME;
 require_once __DIR__ . "/../vendor/autoload.php";
 $project_root = realpath(__DIR__ . "/../../../../");
 require_once "{$project_root}/tests/TestCaseTrait.php";
+require_once __DIR__ . "/UMETestCaseTrait.php";
 
 Autoload::register(__DIR__ . "/../src", true);
 Autoload::register(__DIR__ . "/folder", true);
@@ -26,6 +27,7 @@ Autoload::register(__DIR__ . "/folder", true);
 class REQUIREMENT_Test extends TestCase
 {
     use TestCaseTrait;
+    use UMETestCaseTrait;
     
     protected   $ume;
     
@@ -34,19 +36,6 @@ class REQUIREMENT_Test extends TestCase
     public function setUp(): void
     {
         $this->ume      = new ChildUME();
-    }
-    
-    private function get_response(): \stdClass
-    {
-        $response               = new \stdClass();
-        $response->has_error    = false;
-        $response->on_error     = false;
-        $response->VE           = [];
-        $response->offset       = [];
-        $response->src          = [];
-        $response->dist         = [];
-        $response->index        = "";
-        return $response;
     }
     
     /**
@@ -62,13 +51,13 @@ class REQUIREMENT_Test extends TestCase
         ];
         $string     = "あいうえお漢字<script>alert(\"XSS!\");ABC12345=!*";
         $value      = "";
-        $response   = $this->get_response();
+        $resobj     = $this->get_resobj();
         $labels     = $this->ume->getLabels();
         $label      = $labels["ja_JP"][$key] ?? $key;
         //
-        $this->assertSame(false, $this->callMethod($this->class_name, "fail", [$this->ume, $key, $response]));
-        $this->assertSame("[$label] は必須項目です。", $response->VE[$key]);
-        $this->assertSame(true, $response->has_error);
+        $this->assertSame(false, $this->callMethod($this->class_name, "fail", [$this->ume, $key, $resobj]));
+        $this->assertSame("[$label] は必須項目です。", $resobj->VE[0]);
+        $this->assertSame(true, $resobj->on_error);
     }
     
     /**
@@ -83,11 +72,11 @@ class REQUIREMENT_Test extends TestCase
             "method" => UME::GET, "require" => true
         ];
         $value      = "あいうえお漢字<script>alert(\"XSS!\");ABC12345=!*";
-        $response   = $this->get_response();
+        $resobj   = $this->get_resobj();
         //
-        $result     = REQUIREMENT::should_validate($this->ume, $value, $key, $conditions, $response);
+        $result     = REQUIREMENT::should_validate($this->ume, $value, $key, $conditions, $resobj);
         $this->assertSame(true, $result);
-        $this->assertSame(false, $response->has_error);
+        $this->assertSame(false, $resobj->on_error);
     }
     
     /**
@@ -102,14 +91,14 @@ class REQUIREMENT_Test extends TestCase
             "method" => UME::GET, "require" => true
         ];
         $value      = "";
-        $response   = $this->get_response();
+        $resobj   = $this->get_resobj();
         $labels     = $this->ume->getLabels();
         $label      = $labels["ja_JP"][$key] ?? $key;
         //
-        $result     = REQUIREMENT::should_validate($this->ume, $value, $key, $conditions, $response);
+        $result     = REQUIREMENT::should_validate($this->ume, $value, $key, $conditions, $resobj);
         $this->assertSame(false, $result);
-        $this->assertSame(true, $response->has_error);
-        $this->assertSame("[$label] は必須項目です。", $response->VE[$key]);
+        $this->assertSame(true, $resobj->on_error);
+        $this->assertSame("[$label] は必須項目です。", $resobj->VE[0]);
     }
     
     /**
@@ -124,14 +113,14 @@ class REQUIREMENT_Test extends TestCase
             "method" => UME::GET, "require" => true
         ];
         $value      = null;
-        $response   = $this->get_response();
+        $resobj   = $this->get_resobj();
         $labels     = $this->ume->getLabels();
         $label      = $labels["ja_JP"][$key] ?? $key;
         //
-        $result     = REQUIREMENT::should_validate($this->ume, $value, $key, $conditions, $response);
+        $result     = REQUIREMENT::should_validate($this->ume, $value, $key, $conditions, $resobj);
         $this->assertSame(false, $result);
-        $this->assertSame(true, $response->has_error);
-        $this->assertSame("[$label] は必須項目です。", $response->VE[$key]);
+        $this->assertSame(true, $resobj->on_error);
+        $this->assertSame("[$label] は必須項目です。", $resobj->VE[0]);
     }
     
     /**
@@ -146,11 +135,11 @@ class REQUIREMENT_Test extends TestCase
             "method" => UME::GET, "require" => false
         ];
         $value      = "あいうえお漢字<script>alert(\"XSS!\");ABC12345=!*";
-        $response   = $this->get_response();
+        $resobj   = $this->get_resobj();
         //
-        $result     = REQUIREMENT::should_validate($this->ume, $value, $key, $conditions, $response);
+        $result     = REQUIREMENT::should_validate($this->ume, $value, $key, $conditions, $resobj);
         $this->assertSame(true, $result);
-        $this->assertSame(false, $response->has_error);
+        $this->assertSame(false, $resobj->on_error);
     }
     
     /**
@@ -165,11 +154,11 @@ class REQUIREMENT_Test extends TestCase
             "method" => UME::GET, "require" => false
         ];
         $value      = "";
-        $response   = $this->get_response();
+        $resobj   = $this->get_resobj();
         //
-        $result     = REQUIREMENT::should_validate($this->ume, $value, $key, $conditions, $response);
+        $result     = REQUIREMENT::should_validate($this->ume, $value, $key, $conditions, $resobj);
         $this->assertSame(false, $result);
-        $this->assertSame(false, $response->has_error);
+        $this->assertSame(false, $resobj->on_error);
     }
     
     /**
@@ -184,11 +173,11 @@ class REQUIREMENT_Test extends TestCase
             "method" => UME::GET, "require" => false
         ];
         $value      = null;
-        $response   = $this->get_response();
+        $resobj   = $this->get_resobj();
         //
-        $result     = REQUIREMENT::should_validate($this->ume, $value, $key, $conditions, $response);
+        $result     = REQUIREMENT::should_validate($this->ume, $value, $key, $conditions, $resobj);
         $this->assertSame(false, $result);
-        $this->assertSame(false, $response->has_error);
+        $this->assertSame(false, $resobj->on_error);
     }
     
 }

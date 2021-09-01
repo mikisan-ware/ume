@@ -21,6 +21,7 @@ use \mikisan\pine\app\ChildUME;
 require_once __DIR__ . "/../vendor/autoload.php";
 $project_root = realpath(__DIR__ . "/../../../../");
 require_once "{$project_root}/tests/TestCaseTrait.php";
+require_once __DIR__ . "/UMETestCaseTrait.php";
 
 Autoload::register(__DIR__ . "/../src", true);
 Autoload::register(__DIR__ . "/folder", true);
@@ -30,6 +31,7 @@ if(!defined("LIBRARY_DEBUG"))   { define("LIBRARY_DEBUG", true); }
 class FILE_Test extends TestCase
 {
     use TestCaseTrait;
+    use UMETestCaseTrait;
     
     protected   $ume;
     
@@ -38,19 +40,6 @@ class FILE_Test extends TestCase
     public function setUp(): void
     {
         $this->ume              = new ChildUME();
-    }
-    
-    private function get_response(): \stdClass
-    {
-        $response               = new \stdClass();
-        $response->has_error    = false;
-        $response->on_error     = false;
-        $response->VE           = [];
-        $response->offset       = [];
-        $response->src          = [];
-        $response->dist         = [];
-        $response->index        = "";
-        return $response;
     }
     
     public function test_validate()
@@ -62,7 +51,7 @@ class FILE_Test extends TestCase
             "method" => UME::FILES, "require" => true
         ];
         $type       = $conditions["type"];
-        $response   = $this->get_response();
+        $resobj     = $this->get_resobj();
         $value                  = [];
         $value["name"]          = "ファイルアップロードテスト.txt";
         $value["type"]          = "text/plain";
@@ -71,8 +60,8 @@ class FILE_Test extends TestCase
         $value["error"]         = 0;
         $value["size"]          = 1978;
         //
-        $file = FILE::validate($this->ume, $value, $key, $conditions, $response);
-        $this->assertSame(false, $response->has_error);
+        $file = FILE::validate($this->ume, $value, $key, $conditions, $resobj);
+        $this->assertSame(false, $resobj->on_error);
     }
     
     public function test_validate_unallowed()
@@ -84,7 +73,7 @@ class FILE_Test extends TestCase
             "method" => UME::FILES, "require" => true
         ];
         $type       = $conditions["type"];
-        $response   = $this->get_response();
+        $resobj     = $this->get_resobj();
         $value                  = [];
         $value["name"]          = "ファイルアップロードテスト.jpg";
         $value["type"]          = "image/jpeg";
@@ -96,9 +85,9 @@ class FILE_Test extends TestCase
         $label      = $labels["ja_JP"][$key] ?? $key;
         $note           = $conditions["choice"];
         //
-        $file = FILE::validate($this->ume, $value, $key, $conditions, $response);
-        $this->assertSame("[{$label}] のファイルタイプは許可されていません。（許容値：{$note}）", $response->VE[$key]);
-        $this->assertSame(true, $response->has_error);
+        $file = FILE::validate($this->ume, $value, $key, $conditions, $resobj);
+        $this->assertSame("[{$label}] のファイルタイプは許可されていません。（許容値：{$note}）", $resobj->VE[0]);
+        $this->assertSame(true, $resobj->on_error);
     }
     
     public function test_validate_choice_undefined()
@@ -110,7 +99,7 @@ class FILE_Test extends TestCase
             "method" => UME::FILES, "require" => true
         ];
         $type       = $conditions["type"];
-        $response   = $this->get_response();
+        $resobj     = $this->get_resobj();
         $value                  = [];
         $value["name"]          = "ファイルアップロードテスト.txt";
         $value["type"]          = "text/plain";
@@ -123,7 +112,7 @@ class FILE_Test extends TestCase
         //
         $this->expectException(UMEException::class);
         $this->expectExceptionMessage("[{$label}] でアップロード可能なファイル形式（拡張子）を choice で指定してください。");
-        $file = FILE::validate($this->ume, $value, $key, $conditions, $response);
+        $file = FILE::validate($this->ume, $value, $key, $conditions, $resobj);
     }
     
     public function test_filecheck()
@@ -135,7 +124,7 @@ class FILE_Test extends TestCase
             "method" => UME::FILES, "require" => true
         ];
         $type       = $conditions["type"];
-        $response   = $this->get_response();
+        $resobj     = $this->get_resobj();
         $value                  = [];
         $value["name"]          = "ファイルアップロードテスト.txt";
         $value["type"]          = "text/plain";
@@ -144,7 +133,7 @@ class FILE_Test extends TestCase
         $value["error"]         = 0;
         $value["size"]          = 1978;
         //
-        $this->assertSame(true, $this->callMethod($this->class_name, "filecheck", [$this->ume, $value, $key, $response]));
+        $this->assertSame(true, $this->callMethod($this->class_name, "filecheck", [$this->ume, $value, $key, $resobj]));
     }
     
     public function test_filecheck_no_file()
@@ -156,7 +145,7 @@ class FILE_Test extends TestCase
             "method" => UME::FILES, "require" => true
         ];
         $type       = $conditions["type"];
-        $response   = $this->get_response();
+        $resobj     = $this->get_resobj();
         $value                  = [];
         $value["name"]          = "ファイルアップロードテスト.txt";
         $value["type"]          = "text/plain";
@@ -165,12 +154,12 @@ class FILE_Test extends TestCase
         $value["size"]          = 100000000;
         $labels     = $this->ume->getLabels();
         $label      = $labels["ja_JP"][$key] ?? $key;
-        $response   = $this->get_response();
+        $resobj     = $this->get_resobj();
         //
         $value["error"]         = UPLOAD_ERR_NO_FILE;
         $this->expectException(UMEException::class);
         $this->expectExceptionMessage("[テスト] はファイルが選択されていません。[code: {$value["error"]}]");
-        $this->callMethod($this->class_name, "filecheck", [$this->ume, $value, $key, $response]);
+        $this->callMethod($this->class_name, "filecheck", [$this->ume, $value, $key, $resobj]);
     }
     
     public function test_filecheck_over_filesize_limited()
@@ -182,7 +171,7 @@ class FILE_Test extends TestCase
             "method" => UME::FILES, "require" => true
         ];
         $type       = $conditions["type"];
-        $response   = $this->get_response();
+        $resobj     = $this->get_resobj();
         $value                  = [];
         $value["name"]          = "ファイルアップロードテスト.txt";
         $value["type"]          = "text/plain";
@@ -191,18 +180,18 @@ class FILE_Test extends TestCase
         $value["size"]          = 100000000;
         $labels     = $this->ume->getLabels();
         $label      = $labels["ja_JP"][$key] ?? $key;
-        $response   = $this->get_response();
+        $resobj     = $this->get_resobj();
         //
         $value["error"]         = UPLOAD_ERR_INI_SIZE;
         $this->expectException(UMEException::class);
         $this->expectExceptionMessage("ファイルサイズが大きすぎます。[code: {$value["error"]}]");
-        $this->callMethod($this->class_name, "filecheck", [$this->ume, $value, $key, $response]);
+        $this->callMethod($this->class_name, "filecheck", [$this->ume, $value, $key, $resobj]);
         //
-        $response   = $this->get_response();
+        $resobj     = $this->get_resobj();
         $value["error"]         = UPLOAD_ERR_FORM_SIZE;
         $this->expectException(UMEException::class);
         $this->expectExceptionMessage("ファイルサイズが大きすぎます。[code: {$value["error"]}]");
-        $this->callMethod($this->class_name, "filecheck", [$this->ume, $value, $key, $response]);
+        $this->callMethod($this->class_name, "filecheck", [$this->ume, $value, $key, $resobj]);
     }
     
     public function test_filecheck_over_unknown()
@@ -214,7 +203,7 @@ class FILE_Test extends TestCase
             "method" => UME::FILES, "require" => true
         ];
         $type       = $conditions["type"];
-        $response   = $this->get_response();
+        $resobj     = $this->get_resobj();
         $value                  = [];
         $value["name"]          = "ファイルアップロードテスト.txt";
         $value["type"]          = "text/plain";
@@ -223,12 +212,12 @@ class FILE_Test extends TestCase
         $value["size"]          = 100000000;
         $labels     = $this->ume->getLabels();
         $label      = $labels["ja_JP"][$key] ?? $key;
-        $response   = $this->get_response();
+        $resobj     = $this->get_resobj();
         //
         $value["error"]         = UPLOAD_ERR_EXTENSION;
         $this->expectException(UMEException::class);
         $this->expectExceptionMessage("[{$label}] は正常にアップロード出来ませんでした。[code: {$value["error"]}]");
-        $this->callMethod($this->class_name, "filecheck", [$this->ume, $value, $key, $response]);
+        $this->callMethod($this->class_name, "filecheck", [$this->ume, $value, $key, $resobj]);
     }
     
     public function test_filecheck_file_zero()
@@ -240,7 +229,7 @@ class FILE_Test extends TestCase
             "method" => UME::FILES, "require" => true
         ];
         $type       = $conditions["type"];
-        $response   = $this->get_response();
+        $resobj     = $this->get_resobj();
         $value                  = [];
         $value["name"]          = "ファイルアップロードテスト.txt";
         $value["type"]          = "text/plain";
@@ -250,11 +239,11 @@ class FILE_Test extends TestCase
         $value["size"]          = 0;
         $labels     = $this->ume->getLabels();
         $label      = $labels["ja_JP"][$key] ?? $key;
-        $response   = $this->get_response();
+        $resobj   = $this->get_resobj();
         //
         $this->expectException(UMEException::class);
         $this->expectExceptionMessage("[{$label}] は正常にアップロード出来ませんでした。ファイルサイズが 0 です。");
-        $this->callMethod($this->class_name, "filecheck", [$this->ume, $value, $key, $response]);
+        $this->callMethod($this->class_name, "filecheck", [$this->ume, $value, $key, $resobj]);
     }
     
     public function test_filecheck_uploaded_filename_is_empty()
@@ -266,7 +255,7 @@ class FILE_Test extends TestCase
             "method" => UME::FILES, "require" => true
         ];
         $type       = $conditions["type"];
-        $response   = $this->get_response();
+        $resobj     = $this->get_resobj();
         $value                  = [];
         $value["name"]          = "";
         $value["type"]          = "text/plain";
@@ -276,11 +265,11 @@ class FILE_Test extends TestCase
         $value["size"]          = 1978;
         $labels     = $this->ume->getLabels();
         $label      = $labels["ja_JP"][$key] ?? $key;
-        $response   = $this->get_response();
+        $resobj   = $this->get_resobj();
         //
         $this->expectException(UMEException::class);
         $this->expectExceptionMessage("アップロードされたファイルのファイル名が空です。[{$label}]");
-        $this->callMethod($this->class_name, "filecheck", [$this->ume, $value, $key, $response]);
+        $this->callMethod($this->class_name, "filecheck", [$this->ume, $value, $key, $resobj]);
     }
     
     public function test_filecheck_dot_file()
@@ -292,7 +281,7 @@ class FILE_Test extends TestCase
             "method" => UME::FILES, "require" => true
         ];
         $type       = $conditions["type"];
-        $response   = $this->get_response();
+        $resobj     = $this->get_resobj();
         $value                  = [];
         $value["name"]          = ".";
         $value["type"]          = "text/plain";
@@ -302,11 +291,11 @@ class FILE_Test extends TestCase
         $value["size"]          = 1978;
         $labels     = $this->ume->getLabels();
         $label      = $labels["ja_JP"][$key] ?? $key;
-        $response   = $this->get_response();
+        $resobj   = $this->get_resobj();
         //
         $this->expectException(UMEException::class);
         $this->expectExceptionMessage("先頭または末尾が . の名前のファイルのアップロードは許可されていません。[{$label}]");
-        $this->callMethod($this->class_name, "filecheck", [$this->ume, $value, $key, $response]);
+        $this->callMethod($this->class_name, "filecheck", [$this->ume, $value, $key, $resobj]);
     }
     
     public function test_filecheck_dot_begining_file()
@@ -318,7 +307,7 @@ class FILE_Test extends TestCase
             "method" => UME::FILES, "require" => true
         ];
         $type       = $conditions["type"];
-        $response   = $this->get_response();
+        $resobj     = $this->get_resobj();
         $value                  = [];
         $value["name"]          = ".test";
         $value["type"]          = "text/plain";
@@ -328,12 +317,12 @@ class FILE_Test extends TestCase
         $value["size"]          = 1978;
         $labels     = $this->ume->getLabels();
         $label      = $labels["ja_JP"][$key] ?? $key;
-        $response   = $this->get_response();
+        $resobj   = $this->get_resobj();
         
         //
         $this->expectException(UMEException::class);
         $this->expectExceptionMessage("先頭または末尾が . の名前のファイルのアップロードは許可されていません。[{$label}]");
-        $this->callMethod($this->class_name, "filecheck", [$this->ume, $value, $key, $response]);
+        $this->callMethod($this->class_name, "filecheck", [$this->ume, $value, $key, $resobj]);
     }
     
     public function test_filecheck_dot_ending_file()
@@ -345,7 +334,7 @@ class FILE_Test extends TestCase
             "method" => UME::FILES, "require" => true
         ];
         $type       = $conditions["type"];
-        $response   = $this->get_response();
+        $resobj     = $this->get_resobj();
         $value                  = [];
         $value["name"]          = "test.";
         $value["type"]          = "text/plain";
@@ -359,7 +348,7 @@ class FILE_Test extends TestCase
         //
         $this->expectException(UMEException::class);
         $this->expectExceptionMessage("先頭または末尾が . の名前のファイルのアップロードは許可されていません。[{$label}]");
-        $this->callMethod($this->class_name, "filecheck", [$this->ume, $value, $key, $response]);
+        $this->callMethod($this->class_name, "filecheck", [$this->ume, $value, $key, $resobj]);
     }
     
     public function test_filecheck_containts_slash()
@@ -371,7 +360,7 @@ class FILE_Test extends TestCase
             "method" => UME::FILES, "require" => true
         ];
         $type       = $conditions["type"];
-        $response   = $this->get_response();
+        $resobj     = $this->get_resobj();
         $value                  = [];
         $value["name"]          = "test/testfile.txt";
         $value["type"]          = "text/plain";
@@ -381,11 +370,11 @@ class FILE_Test extends TestCase
         $value["size"]          = 1978;
         $labels     = $this->ume->getLabels();
         $label      = $labels["ja_JP"][$key] ?? $key;
-        $response   = $this->get_response();
+        $resobj   = $this->get_resobj();
         //
         $this->expectException(UMEException::class);
         $this->expectExceptionMessage("ファイル名に / を含むファイルのアップロードは許可されていません。[{$label}]");
-        $this->callMethod($this->class_name, "filecheck", [$this->ume, $value, $key, $response]);
+        $this->callMethod($this->class_name, "filecheck", [$this->ume, $value, $key, $resobj]);
     }
     
     public function test_filecheck_containts_5c()
@@ -397,7 +386,7 @@ class FILE_Test extends TestCase
             "method" => UME::FILES, "require" => true
         ];
         $type       = $conditions["type"];
-        $response   = $this->get_response();
+        $resobj     = $this->get_resobj();
         $value                  = [];
         $value["name"]          = "test\\testfile.txt";
         $value["type"]          = "text/plain";
@@ -407,11 +396,11 @@ class FILE_Test extends TestCase
         $value["size"]          = 1978;
         $labels     = $this->ume->getLabels();
         $label      = $labels["ja_JP"][$key] ?? $key;
-        $response   = $this->get_response();
+        $resobj   = $this->get_resobj();
         //
         $this->expectException(UMEException::class);
         $this->expectExceptionMessage("ファイル名に \\ を含むファイルのアップロードは許可されていません。[{$label}]");
-        $this->callMethod($this->class_name, "filecheck", [$this->ume, $value, $key, $response]);
+        $this->callMethod($this->class_name, "filecheck", [$this->ume, $value, $key, $resobj]);
     }
     
 }

@@ -87,7 +87,7 @@ class VALIDATE_Test extends TestCase
         ];
         $response   = $this->get_response();
         //
-        VALIDATE::do($this->ume, $key, $conditions, $response);
+        VALIDATE::normal($this->ume, $key, $conditions, $response);
         $this->assertCount(1, $response->dist[$prefix]);
         $this->assertSame(false, $response->has_error);
         //
@@ -114,7 +114,7 @@ class VALIDATE_Test extends TestCase
         ];
         $response   = $this->get_response();
         //
-        VALIDATE::do($this->ume, $key, $conditions, $response);
+        VALIDATE::normal($this->ume, $key, $conditions, $response);
         $this->assertSame(true, $response->has_error);
         //
         $this->assertSame(1234, $response->dist[$prefix][1][2][3]);
@@ -147,7 +147,7 @@ class VALIDATE_Test extends TestCase
         //
         $this->expectException(UMEException::class);
         $this->expectExceptionMessage("バリデーション設定内に記述された、キー [{$prefix}] の method [{$conditions["method"]}] は定義されていません。");
-        VALIDATE::do($this->ume, $key, $conditions, $response);
+        VALIDATE::normal($this->ume, $key, $conditions, $response);
     }
     
     public function test_do_hierarchy_post()
@@ -167,7 +167,7 @@ class VALIDATE_Test extends TestCase
         ];
         $response   = $this->get_response();
         //
-        VALIDATE::do($this->ume, $key, $conditions, $response);
+        VALIDATE::normal($this->ume, $key, $conditions, $response);
         $this->assertCount(1, $response->dist[$prefix]);
         $this->assertSame(false, $response->has_error);
         //
@@ -194,7 +194,7 @@ class VALIDATE_Test extends TestCase
         ];
         $response   = $this->get_response();
         //
-        VALIDATE::do($this->ume, $key, $conditions, $response);
+        VALIDATE::normal($this->ume, $key, $conditions, $response);
         $this->assertCount(1, $response->dist[$prefix]);
         $this->assertSame(false, $response->has_error);
         //

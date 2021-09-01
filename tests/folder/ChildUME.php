@@ -42,6 +42,11 @@ class ChildUME extends ModuleCommonUME
                 "filter" => "string", "closer" => null, "trim" => UME::TRIM_ALL, "null_byte" => false,
                 "method" => UME::GET, "require" => false
             ],
+            "test[]" => [
+                "type" => "int", "min" => PHP_INT_MIN, "max" => PHP_INT_MAX, "auto_correct" => true, 
+                "filter" => "string", "closer" => null, "trim" => UME::TRIM_ALL, "null_byte" => false,
+                "method" => UME::GET, "require" => false
+            ],
         ];
     }
     

@@ -21,6 +21,7 @@ use \mikisan\pine\app\ChildUME;
 require_once __DIR__ . "/../vendor/autoload.php";
 $project_root = realpath(__DIR__ . "/../../../../");
 require_once "{$project_root}/tests/TestCaseTrait.php";
+require_once __DIR__ . "/UMETestCaseTrait.php";
 
 Autoload::register(__DIR__ . "/../src", true);
 Autoload::register(__DIR__ . "/folder", true);
@@ -28,25 +29,13 @@ Autoload::register(__DIR__ . "/folder", true);
 class VALUE_Test extends TestCase
 {
     use TestCaseTrait;
+    use UMETestCaseTrait;
     
     protected   $ume;
 
     public function setUp(): void
     {
         $this->ume              = new ChildUME();
-    }
-    
-    private function get_response(): \stdClass
-    {
-        $response               = new \stdClass();
-        $response->has_error    = false;
-        $response->on_error     = false;
-        $response->VE           = [];
-        $response->offset       = [];
-        $response->src          = [];
-        $response->dist         = [];
-        $response->index        = "";
-        return $response;
     }
     
     /***************************************************************************
@@ -61,10 +50,10 @@ class VALUE_Test extends TestCase
             "method" => UME::GET, "require" => true
         ];
         $type       = $conditions["type"];
-        $response   = $this->get_response();
+        $resobj     = $this->get_resobj();
         //
         $value      = "あいうえおー漢字－１２３４５６７８９０ＡＢＣＤＥＦＧｈｉｊｋｌｍｎ<script>alert(\"XSS!\");@＠ABC12345=！＃＄％＆（）－＝「」＊!#$%&()=[]*";
-        $result     = VALUE::validate($this->ume, $value, $key, $conditions, $response);
+        $result     = VALUE::validate($this->ume, $value, $key, $conditions, $resobj);
         $this->assertSame($value, $result);
     }
     
@@ -80,10 +69,10 @@ class VALUE_Test extends TestCase
             "method" => UME::GET, "require" => true
         ];
         $type       = $conditions["type"];
-        $response   = $this->get_response();
+        $resobj     = $this->get_resobj();
         //
         $value      = "あいう";
-        $result     = VALUE::validate($this->ume, $value, $key, $conditions, $response);
+        $result     = VALUE::validate($this->ume, $value, $key, $conditions, $resobj);
         $this->assertSame($value, $result);
     }
     
@@ -99,10 +88,10 @@ class VALUE_Test extends TestCase
             "method" => UME::GET, "require" => true
         ];
         $type       = $conditions["type"];
-        $response   = $this->get_response();
+        $resobj     = $this->get_resobj();
         //
         $value      = "あいうえ";
-        $result     = VALUE::validate($this->ume, $value, $key, $conditions, $response);
+        $result     = VALUE::validate($this->ume, $value, $key, $conditions, $resobj);
         $this->assertSame(null, $result);
     }
     
@@ -119,10 +108,10 @@ class VALUE_Test extends TestCase
             "method" => UME::GET, "require" => true
         ];
         $type       = $conditions["type"];
-        $response   = $this->get_response();
+        $resobj     = $this->get_resobj();
         //
         $value      = "さしす";
-        $result     = VALUE::validate($this->ume, $value, $key, $conditions, $response);
+        $result     = VALUE::validate($this->ume, $value, $key, $conditions, $resobj);
         $this->assertSame(null, $result);
     }
     
@@ -138,10 +127,10 @@ class VALUE_Test extends TestCase
             "method" => UME::GET, "require" => true
         ];
         $type       = $conditions["type"];
-        $response   = $this->get_response();
+        $resobj     = $this->get_resobj();
         //
         $value      = "  \r\n\0あいうえおー漢字－１２３ＡＢＣABC123!#$%&()=[]\0*\r\n  ";
-        $result     = VALUE::validate($this->ume, $value, $key, $conditions, $response);
+        $result     = VALUE::validate($this->ume, $value, $key, $conditions, $resobj);
         $this->assertSame("あいうえおー漢字－１２３ＡＢＣABC123!#$%&()=[]*", $result);
     }
     
@@ -157,10 +146,10 @@ class VALUE_Test extends TestCase
             "method" => UME::GET, "require" => true
         ];
         $type       = $conditions["type"];
-        $response   = $this->get_response();
+        $resobj     = $this->get_resobj();
         //
         $value      = "あいうえおー漢字－\0１２３ＡＢＣ\0\0ABC123!#$%&()=[]*";
-        $result     = VALUE::validate($this->ume, $value, $key, $conditions, $response);
+        $result     = VALUE::validate($this->ume, $value, $key, $conditions, $resobj);
         $this->assertSame("あいうえおー漢字－１２３ＡＢＣABC123!#$%&()=[]*", $result);
     }
     
@@ -176,10 +165,10 @@ class VALUE_Test extends TestCase
             "method" => UME::GET, "require" => true
         ];
         $type       = $conditions["type"];
-        $response   = $this->get_response();
+        $resobj     = $this->get_resobj();
         //
         $value      = "１２３123";
-        $result     = VALUE::validate($this->ume, $value, $key, $conditions, $response);
+        $result     = VALUE::validate($this->ume, $value, $key, $conditions, $resobj);
         $this->assertSame(123123, $result);
     }
     
@@ -195,12 +184,12 @@ class VALUE_Test extends TestCase
             "method" => UME::GET, "require" => true
         ];
         $type       = $conditions["type"];
-        $response   = $this->get_response();
+        $resobj     = $this->get_resobj();
         //
         $value      = "１２３123";
-        $result     = VALUE::validate($this->ume, $value, $key, $conditions, $response);
+        $result     = VALUE::validate($this->ume, $value, $key, $conditions, $resobj);
         $this->assertSame(null, $result);
-        $this->assertSame("[テスト] は整数でなければなりません。", $response->VE["test"]);
+        $this->assertSame("[テスト] は整数でなければなりません。", $resobj->VE[0]);
     }
     
     public function test_do_validate_int_choice()
@@ -212,10 +201,10 @@ class VALUE_Test extends TestCase
             "method" => UME::GET, "require" => true
         ];
         $type       = $conditions["type"];
-        $response   = $this->get_response();
+        $resobj     = $this->get_resobj();
         //
         $value      = "１２３";
-        $result     = VALUE::validate($this->ume, $value, $key, $conditions, $response);
+        $result     = VALUE::validate($this->ume, $value, $key, $conditions, $resobj);
         $this->assertSame(123, $result);
     }
     
@@ -232,10 +221,10 @@ class VALUE_Test extends TestCase
             "method" => UME::GET, "require" => true
         ];
         $type       = $conditions["type"];
-        $response   = $this->get_response();
+        $resobj     = $this->get_resobj();
         //
         $value      = "１２３123";
-        $result     = VALUE::validate($this->ume, $value, $key, $conditions, $response);
+        $result     = VALUE::validate($this->ume, $value, $key, $conditions, $resobj);
         $this->assertSame("123123", $result);
     }
     
@@ -251,12 +240,12 @@ class VALUE_Test extends TestCase
             "method" => UME::GET, "require" => true
         ];
         $type       = $conditions["type"];
-        $response   = $this->get_response();
+        $resobj     = $this->get_resobj();
         //
         $value      = "１２３123";
-        $result     = VALUE::validate($this->ume, $value, $key, $conditions, $response);
+        $result     = VALUE::validate($this->ume, $value, $key, $conditions, $resobj);
         $this->assertSame(null, $result);
-        $this->assertSame("[テスト] には半角数字以外が含まれています。", $response->VE["test"]);
+        $this->assertSame("[テスト] には半角数字以外が含まれています。", $resobj->VE[0]);
     }
     
     public function test_do_validate_digit_choice()
@@ -268,10 +257,10 @@ class VALUE_Test extends TestCase
             "method" => UME::GET, "require" => true
         ];
         $type       = $conditions["type"];
-        $response   = $this->get_response();
+        $resobj     = $this->get_resobj();
         //
         $value      = "１２３";
-        $result     = VALUE::validate($this->ume, $value, $key, $conditions, $response);
+        $result     = VALUE::validate($this->ume, $value, $key, $conditions, $resobj);
         $this->assertSame("123", $result);
     }
     

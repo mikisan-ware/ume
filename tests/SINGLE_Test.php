@@ -81,7 +81,7 @@ class SINGLE_Test extends TestCase
         //
         $file = SINGLE::validate($this->ume, $src, $key, $conditions, $response);
         $this->assertSame(true, $response->has_error);
-        $this->assertSame("[テスト] は整数でなければなりません。", $response->VE[$key]);
+        $this->assertSame("[テスト] は整数でなければなりません。", $response->VE[0]);
     }
     
     public function test_validate_file()
@@ -130,7 +130,7 @@ class SINGLE_Test extends TestCase
         //
         $file = SINGLE::validate($this->ume, $src, $key, $conditions, $response);
         $this->assertSame(true, $response->has_error);
-        $this->assertSame("[{$label}] のファイルタイプは許可されていません。（許容値：{$note}）", $response->VE[$key]);
+        $this->assertSame("[{$label}] のファイルタイプは許可されていません。（許容値：{$note}）", $response->VE[0]);
     }
     
 }

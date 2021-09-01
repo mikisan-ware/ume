@@ -21,6 +21,7 @@ use \mikisan\pine\app\ChildUME;
 require_once __DIR__ . "/../vendor/autoload.php";
 $project_root = realpath(__DIR__ . "/../../../../");
 require_once "{$project_root}/tests/TestCaseTrait.php";
+require_once __DIR__ . "/UMETestCaseTrait.php";
 
 Autoload::register(__DIR__ . "/../src", true);
 Autoload::register(__DIR__ . "/folder", true);
@@ -28,6 +29,7 @@ Autoload::register(__DIR__ . "/folder", true);
 class CHOICE_Test extends TestCase
 {
     use TestCaseTrait;
+    use UMETestCaseTrait;
     
     protected $ume;
 
@@ -36,25 +38,12 @@ class CHOICE_Test extends TestCase
         $this->ume      = new ChildUME();
     }
     
-    private function get_response(): \stdClass
-    {
-        $response               = new \stdClass();
-        $response->has_error    = false;
-        $response->on_error     = false;
-        $response->VE           = [];
-        $response->offset       = [];
-        $response->src          = [];
-        $response->dist         = [];
-        $response->index        = "";
-        return $response;
-    }
-    
     /**
      * choiceが | 区切りのstringの場合の通常パラメータのテスト
      */
     public function test_isInListValue_string()
     {
-        $response       = $this->get_response();
+        $resobj         = $this->get_resobj();
         $key            = "test";
         $conditions     = [
             "type" => "text", "min" => PHP_INT_MIN, "max" => PHP_INT_MAX, "choice" => "abc|def|ghi",
@@ -63,7 +52,7 @@ class CHOICE_Test extends TestCase
         ];
         $value          = "def";
         
-        $result     = CHOICE::isInListValue($this->ume, $value, $key, $conditions, $response);
+        $result     = CHOICE::isInListValue($this->ume, $value, $key, $conditions, $resobj);
         $this->assertSame(true, $result);
     }
     
@@ -72,7 +61,7 @@ class CHOICE_Test extends TestCase
      */
     public function test_isInListValue_array()
     {
-        $response       = $this->get_response();
+        $resobj         = $this->get_resobj();
         $key            = "test";
         $conditions     = [
             "type" => "text", "min" => PHP_INT_MIN, "max" => PHP_INT_MAX, "choice" => ["abc", "def", "ghi"],
@@ -81,7 +70,7 @@ class CHOICE_Test extends TestCase
         ];
         $value          = "def";
         
-        $result     = CHOICE::isInListValue($this->ume, $value, $key, $conditions, $response);
+        $result     = CHOICE::isInListValue($this->ume, $value, $key, $conditions, $resobj);
         $this->assertSame(true, $result);
     }
     
@@ -90,7 +79,7 @@ class CHOICE_Test extends TestCase
      */
     public function test_do_ummatch()
     {
-        $response       = $this->get_response();
+        $resobj         = $this->get_resobj();
         $key            = "test";
         $conditions     = [
             "type" => "text", "min" => PHP_INT_MIN, "max" => PHP_INT_MAX, "choice" => "abc|def|ghi",
@@ -102,9 +91,9 @@ class CHOICE_Test extends TestCase
         $label          = $labels["ja_JP"][$key] ?? $key;
         $note           = "abc|def|ghi";
         
-        $result     = CHOICE::isInListValue($this->ume, $value, $key, $conditions, $response);
+        $result     = CHOICE::isInListValue($this->ume, $value, $key, $conditions, $resobj);
         $this->assertSame(false, $result);
-        $this->assertSame("[{$label}] の値は許可されていません。（許容値：{$note}）", $response->VE[$key]);
+        $this->assertSame("[{$label}] の値は許可されていません。（許容値：{$note}）", $resobj->VE[0]);
     }
     
     /**
@@ -112,7 +101,7 @@ class CHOICE_Test extends TestCase
      */
     public function test_isInListValue_int_array()
     {
-        $response       = $this->get_response();
+        $resobj         = $this->get_resobj();
         $key            = "test";
         $conditions     = [
             "type" => "text", "min" => PHP_INT_MIN, "max" => PHP_INT_MAX, "choice" => [1, 2, 3],
@@ -121,7 +110,7 @@ class CHOICE_Test extends TestCase
         ];
         $value          = 3;
         
-        $result     = CHOICE::isInListValue($this->ume, $value, $key, $conditions, $response);
+        $result     = CHOICE::isInListValue($this->ume, $value, $key, $conditions, $resobj);
         $this->assertSame(true, $result);
     }
     
@@ -130,7 +119,7 @@ class CHOICE_Test extends TestCase
      */
     public function test_disInListValue_exception()
     {
-        $response       = $this->get_response();
+        $resobj         = $this->get_resobj();
         $key            = "test";
         $conditions     = [
             "type" => "text", "min" => PHP_INT_MIN, "max" => PHP_INT_MAX, "choice" => 123,
@@ -144,7 +133,7 @@ class CHOICE_Test extends TestCase
         $this->expectException(UMEException::class);
         $this->expectExceptionMessage("[{$label}] の choice の型が不正です。配列で指定してください。");
         
-        $result     = CHOICE::isInListValue($this->ume, $value, $key, $conditions, $response);
+        $result     = CHOICE::isInListValue($this->ume, $value, $key, $conditions, $resobj);
     }
     
     /**
@@ -152,7 +141,7 @@ class CHOICE_Test extends TestCase
      */
     public function test_isInListFileType_string()
     {
-        $response       = $this->get_response();
+        $resobj         = $this->get_resobj();
         $key            = "test";
         $conditions     = [
             "type" => "text", "min" => PHP_INT_MIN, "max" => PHP_INT_MAX, "choice" => "jpg|png|gif",
@@ -167,7 +156,7 @@ class CHOICE_Test extends TestCase
         $value["error"]         = 0;
         $value["size"]          = 15476;
         
-        $result     = CHOICE::isInListFileType($this->ume, $value, $key, $conditions, $response);
+        $result     = CHOICE::isInListFileType($this->ume, $value, $key, $conditions, $resobj);
         $this->assertSame(true, $result);
     }
     
@@ -176,7 +165,7 @@ class CHOICE_Test extends TestCase
      */
     public function test_isInListFileType_array()
     {
-        $response       = $this->get_response();
+        $resobj         = $this->get_resobj();
         $key            = "test";
         $conditions     = [
             "type" => "text", "min" => PHP_INT_MIN, "max" => PHP_INT_MAX, "choice" => ["jpg", "png", "gif"],
@@ -191,7 +180,7 @@ class CHOICE_Test extends TestCase
         $value["error"]         = 0;
         $value["size"]          = 15476;
         
-        $result     = CHOICE::isInListFileType($this->ume, $value, $key, $conditions, $response);
+        $result     = CHOICE::isInListFileType($this->ume, $value, $key, $conditions, $resobj);
         $this->assertSame(true, $result);
     }
     
@@ -200,7 +189,7 @@ class CHOICE_Test extends TestCase
      */
     public function test_isInListFileType_unmatch()
     {
-        $response       = $this->get_response();
+        $resobj         = $this->get_resobj();
         $key            = "test";
         $conditions     = [
             "type" => "text", "min" => PHP_INT_MIN, "max" => PHP_INT_MAX, "choice" => "jpg|png|gif",
@@ -218,9 +207,9 @@ class CHOICE_Test extends TestCase
         $label          = $labels["ja_JP"][$key] ?? $key;
         $note           = "jpg|png|gif";
         
-        $result     = CHOICE::isInListFileType($this->ume, $value, $key, $conditions, $response);
+        $result     = CHOICE::isInListFileType($this->ume, $value, $key, $conditions, $resobj);
         $this->assertSame(false, $result);
-        $this->assertSame("[{$label}] のファイルタイプは許可されていません。（許容値：{$note}）", $response->VE[$key]);
+        $this->assertSame("[{$label}] のファイルタイプは許可されていません。（許容値：{$note}）", $resobj->VE[0]);
     }
     
     /**
@@ -228,7 +217,7 @@ class CHOICE_Test extends TestCase
      */
     public function test_isInListFileType_null()
     {
-        $response       = $this->get_response();
+        $resobj         = $this->get_resobj();
         $key            = "test";
         $conditions     = [
             "type" => "text", "min" => PHP_INT_MIN, "max" => PHP_INT_MAX, "choice" => null,
@@ -249,7 +238,7 @@ class CHOICE_Test extends TestCase
         $this->expectException(UMEException::class);
         $this->expectExceptionMessage("[{$label}] で許容するファイルタイプが未設定です。");
         //
-        $result     = CHOICE::isInListFileType($this->ume, $value, $key, $conditions, $response);
+        $result     = CHOICE::isInListFileType($this->ume, $value, $key, $conditions, $resobj);
     }
     
 }

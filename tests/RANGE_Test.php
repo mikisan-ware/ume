@@ -21,6 +21,7 @@ use \mikisan\pine\app\ChildUME;
 require_once __DIR__ . "/../vendor/autoload.php";
 $project_root = realpath(__DIR__ . "/../../../../");
 require_once "{$project_root}/tests/TestCaseTrait.php";
+require_once __DIR__ . "/UMETestCaseTrait.php";
 
 Autoload::register(__DIR__ . "/../src", true);
 Autoload::register(__DIR__ . "/folder", true);
@@ -28,6 +29,7 @@ Autoload::register(__DIR__ . "/folder", true);
 class RANGE_Test extends TestCase
 {
     use TestCaseTrait;
+    use UMETestCaseTrait;
     
     protected $ume;
 
@@ -36,25 +38,12 @@ class RANGE_Test extends TestCase
         $this->ume      = new ChildUME();
     }
     
-    private function get_response(): \stdClass
-    {
-        $response               = new \stdClass();
-        $response->has_error    = false;
-        $response->on_error     = false;
-        $response->VE           = [];
-        $response->offset       = [];
-        $response->src          = [];
-        $response->dist         = [];
-        $response->index        = "";
-        return $response;
-    }
-    
     /**
      * TYPE_INTEGER
      */
     public function test_isInRange_int()
     {
-        $response           = $this->get_response();
+        $resobj     = $this->get_resobj();
         $key                = "test";
         $conditions         = [
             "type" => "int", "min" => PHP_INT_MIN, "max" => PHP_INT_MAX,
@@ -63,7 +52,7 @@ class RANGE_Test extends TestCase
         ];
         $value              = 123;
         
-        $result     = RANGE::isInRange($this->ume, $value, $key, $conditions, $response);
+        $result     = RANGE::isInRange($this->ume, $value, $key, $conditions, $resobj);
         $this->assertSame(true, $result);
     }
     
@@ -72,7 +61,7 @@ class RANGE_Test extends TestCase
      */
     public function test_isInRange_int_under()
     {
-        $response           = $this->get_response();
+        $resobj     = $this->get_resobj();
         $key                = "test";
         $conditions         = [
             "type" => "int", "min" => 200, "max" => PHP_INT_MAX,
@@ -83,9 +72,9 @@ class RANGE_Test extends TestCase
         $labels             = $this->ume->getLabels();
         $label              = $labels["ja_JP"][$key] ?? $key;
         //
-        $result     = RANGE::isInRange($this->ume, $value, $key, $conditions, $response);
+        $result     = RANGE::isInRange($this->ume, $value, $key, $conditions, $resobj);
         $this->assertSame(false, $result);
-        $this->assertSame("[{$label}] は {$conditions["min"]} 以上の整数にしてください。", $response->VE[$key]);
+        $this->assertSame("[{$label}] は {$conditions["min"]} 以上の整数にしてください。", $resobj->VE[0]);
     }
     
     /**
@@ -93,7 +82,7 @@ class RANGE_Test extends TestCase
      */
     public function test_isInRange_int_orver()
     {
-        $response           = $this->get_response();
+        $resobj     = $this->get_resobj();
         $key                = "test";
         $conditions         = [
             "type" => "int", "min" => 200, "max" => 1000,
@@ -104,9 +93,9 @@ class RANGE_Test extends TestCase
         $labels             = $this->ume->getLabels();
         $label              = $labels["ja_JP"][$key] ?? $key;
         //
-        $result     = RANGE::isInRange($this->ume, $value, $key, $conditions, $response);
+        $result     = RANGE::isInRange($this->ume, $value, $key, $conditions, $resobj);
         $this->assertSame(false, $result);
-        $this->assertSame("[{$label}] は {$conditions["max"]} 以下の整数にしてください。", $response->VE[$key]);
+        $this->assertSame("[{$label}] は {$conditions["max"]} 以下の整数にしてください。", $resobj->VE[0]);
     }
     
     /**
@@ -114,7 +103,7 @@ class RANGE_Test extends TestCase
      */
     public function test_isInRange_real()
     {
-        $response           = $this->get_response();
+        $resobj     = $this->get_resobj();
         $key                = "test";
         $conditions         = [
             "type" => "double", "min" => PHP_INT_MIN, "max" => PHP_INT_MAX,
@@ -123,7 +112,7 @@ class RANGE_Test extends TestCase
         ];
         $value              = 123.45;
         
-        $result     = RANGE::isInRange($this->ume, $value, $key, $conditions, $response);
+        $result     = RANGE::isInRange($this->ume, $value, $key, $conditions, $resobj);
         $this->assertSame(true, $result);
     }
     
@@ -132,7 +121,7 @@ class RANGE_Test extends TestCase
      */
     public function test_isInRange_real_under()
     {
-        $response           = $this->get_response();
+        $resobj     = $this->get_resobj();
         $key                = "test";
         $conditions         = [
             "type" => "double", "min" => 123.45, "max" => PHP_INT_MAX,
@@ -143,9 +132,9 @@ class RANGE_Test extends TestCase
         $labels             = $this->ume->getLabels();
         $label              = $labels["ja_JP"][$key] ?? $key;
         //
-        $result     = RANGE::isInRange($this->ume, $value, $key, $conditions, $response);
+        $result     = RANGE::isInRange($this->ume, $value, $key, $conditions, $resobj);
         $this->assertSame(false, $result);
-        $this->assertSame("[{$label}] は {$conditions["min"]} 以上の実数にしてください。", $response->VE[$key]);
+        $this->assertSame("[{$label}] は {$conditions["min"]} 以上の実数にしてください。", $resobj->VE[0]);
     }
     
     /**
@@ -153,7 +142,7 @@ class RANGE_Test extends TestCase
      */
     public function test_isInRange_real_orver()
     {
-        $response           = $this->get_response();
+        $resobj     = $this->get_resobj();
         $key                = "test";
         $conditions         = [
             "type" => "double", "min" => 200, "max" => 1000.45,
@@ -164,9 +153,9 @@ class RANGE_Test extends TestCase
         $labels             = $this->ume->getLabels();
         $label              = $labels["ja_JP"][$key] ?? $key;
         //
-        $result     = RANGE::isInRange($this->ume, $value, $key, $conditions, $response);
+        $result     = RANGE::isInRange($this->ume, $value, $key, $conditions, $resobj);
         $this->assertSame(false, $result);
-        $this->assertSame("[{$label}] は {$conditions["max"]} 以下の実数にしてください。", $response->VE[$key]);
+        $this->assertSame("[{$label}] は {$conditions["max"]} 以下の実数にしてください。", $resobj->VE[0]);
     }
     
     /**
@@ -174,7 +163,7 @@ class RANGE_Test extends TestCase
      */
     public function test_isInRange_string()
     {
-        $response           = $this->get_response();
+        $resobj     = $this->get_resobj();
         $key                = "test";
         $conditions         = [
             "type" => "text", "min" => PHP_INT_MIN, "max" => PHP_INT_MAX,
@@ -183,7 +172,7 @@ class RANGE_Test extends TestCase
         ];
         $value              = "123.ab";
         
-        $result     = RANGE::isInRange($this->ume, $value, $key, $conditions, $response);
+        $result     = RANGE::isInRange($this->ume, $value, $key, $conditions, $resobj);
         $this->assertSame(true, $result);
     }
     
@@ -192,7 +181,7 @@ class RANGE_Test extends TestCase
      */
     public function test_isInRange_string_under()
     {
-        $response           = $this->get_response();
+        $resobj     = $this->get_resobj();
         $key                = "test";
         $conditions         = [
             "type" => "text", "min" => 7, "max" => PHP_INT_MAX,
@@ -203,9 +192,9 @@ class RANGE_Test extends TestCase
         $labels             = $this->ume->getLabels();
         $label              = $labels["ja_JP"][$key] ?? $key;
         //
-        $result     = RANGE::isInRange($this->ume, $value, $key, $conditions, $response);
+        $result     = RANGE::isInRange($this->ume, $value, $key, $conditions, $resobj);
         $this->assertSame(false, $result);
-        $this->assertSame("[{$label}] は {$conditions["min"]} 文字以上にしてください。", $response->VE[$key]);
+        $this->assertSame("[{$label}] は {$conditions["min"]} 文字以上にしてください。", $resobj->VE[0]);
     }
     
     /**
@@ -213,7 +202,7 @@ class RANGE_Test extends TestCase
      */
     public function test_isInRange_string_orver()
     {
-        $response           = $this->get_response();
+        $resobj     = $this->get_resobj();
         $key                = "test";
         $conditions         = [
             "type" => "text", "min" => 7, "max" => 8,
@@ -224,9 +213,9 @@ class RANGE_Test extends TestCase
         $labels             = $this->ume->getLabels();
         $label              = $labels["ja_JP"][$key] ?? $key;
         //
-        $result     = RANGE::isInRange($this->ume, $value, $key, $conditions, $response);
+        $result     = RANGE::isInRange($this->ume, $value, $key, $conditions, $resobj);
         $this->assertSame(false, $result);
-        $this->assertSame("[{$label}] は {$conditions["max"]} 文字以下にしてください。", $response->VE[$key]);
+        $this->assertSame("[{$label}] は {$conditions["max"]} 文字以下にしてください。", $resobj->VE[0]);
     }
     
     /**
@@ -234,7 +223,7 @@ class RANGE_Test extends TestCase
      */
     public function test_isInRange_file_1()
     {
-        $response           = $this->get_response();
+        $resobj     = $this->get_resobj();
         $key                = "test";
         $conditions         = [
             "type" => "file", "min" => 0, "max" => 1024,
@@ -251,13 +240,13 @@ class RANGE_Test extends TestCase
         $labels             = $this->ume->getLabels();
         $label              = $labels["ja_JP"][$key] ?? $key;
         //
-        $result     = RANGE::isInRange($this->ume, $value, $key, $conditions, $response);
+        $result     = RANGE::isInRange($this->ume, $value, $key, $conditions, $resobj);
         $this->assertSame(true, $result);
     }
     
     public function test_isInRange_file_2()
     {
-        $response           = $this->get_response();
+        $resobj     = $this->get_resobj();
         $key                = "test";
         $conditions         = [
             "type" => "file", "min" => 0, "max" => "1KiB",
@@ -274,7 +263,7 @@ class RANGE_Test extends TestCase
         $labels             = $this->ume->getLabels();
         $label              = $labels["ja_JP"][$key] ?? $key;
         //
-        $result     = RANGE::isInRange($this->ume, $value, $key, $conditions, $response);
+        $result     = RANGE::isInRange($this->ume, $value, $key, $conditions, $resobj);
         $this->assertSame(true, $result);
     }
     
@@ -283,7 +272,7 @@ class RANGE_Test extends TestCase
      */
     public function test_isInRange_file_under()
     {
-        $response           = $this->get_response();
+        $resobj     = $this->get_resobj();
         $key                = "test";
         $conditions         = [
             "type" => "file", "min" => 10, "max" => PHP_INT_MAX,
@@ -300,9 +289,9 @@ class RANGE_Test extends TestCase
         $labels             = $this->ume->getLabels();
         $label              = $labels["ja_JP"][$key] ?? $key;
         //
-        $result     = RANGE::isInRange($this->ume, $value, $key, $conditions, $response);
+        $result     = RANGE::isInRange($this->ume, $value, $key, $conditions, $resobj);
         $this->assertSame(false, $result);
-        $this->assertSame("[{$label}] のファイルサイズが小さ過ぎます。許容されているファイルサイズは 10 Bytes です。", $response->VE[$key]);
+        $this->assertSame("[{$label}] のファイルサイズが小さ過ぎます。許容されているファイルサイズは 10 Bytes です。", $resobj->VE[0]);
     }
     
     /**
@@ -310,7 +299,7 @@ class RANGE_Test extends TestCase
      */
     public function test_isInRange_file_orver_1()
     {
-        $response           = $this->get_response();
+        $resobj     = $this->get_resobj();
         $key                = "test";
         $conditions         = [
             "type" => "file", "min" => 0, "max" => 1024,
@@ -327,9 +316,9 @@ class RANGE_Test extends TestCase
         $labels             = $this->ume->getLabels();
         $label              = $labels["ja_JP"][$key] ?? $key;
         //
-        $result     = RANGE::isInRange($this->ume, $value, $key, $conditions, $response);
+        $result     = RANGE::isInRange($this->ume, $value, $key, $conditions, $resobj);
         $this->assertSame(false, $result);
-        $this->assertSame("[{$label}] のファイルサイズが大き過ぎます。許容されているファイルサイズは 1024 Bytes です。", $response->VE[$key]);
+        $this->assertSame("[{$label}] のファイルサイズが大き過ぎます。許容されているファイルサイズは 1024 Bytes です。", $resobj->VE[0]);
     }
     
     /**
@@ -337,7 +326,7 @@ class RANGE_Test extends TestCase
      */
     public function test_isInRange_file_orver_2()
     {
-        $response           = $this->get_response();
+        $resobj     = $this->get_resobj();
         $key                = "test";
         $conditions         = [
             "type" => "file", "min" => 0, "max" => "1KiB",
@@ -354,10 +343,10 @@ class RANGE_Test extends TestCase
         $labels             = $this->ume->getLabels();
         $label              = $labels["ja_JP"][$key] ?? $key;
         //
-        $result             = RANGE::isInRange($this->ume, $value, $key, $conditions, $response);
+        $result             = RANGE::isInRange($this->ume, $value, $key, $conditions, $resobj);
         //
         $this->assertSame(false, $result);
-        $this->assertSame("[{$label}] のファイルサイズが大き過ぎます。許容されているファイルサイズは 1KiB です。", $response->VE[$key]);
+        $this->assertSame("[{$label}] のファイルサイズが大き過ぎます。許容されているファイルサイズは 1KiB です。", $resobj->VE[0]);
     }
     
     /**
@@ -365,7 +354,7 @@ class RANGE_Test extends TestCase
      */
     public function test_isInRange_file_wrong_unit_sepcified()
     {
-        $response           = $this->get_response();
+        $resobj     = $this->get_resobj();
         $key                = "test";
         $conditions         = [
             "type" => "file", "min" => 0, "max" => "1FiB",
@@ -385,7 +374,7 @@ class RANGE_Test extends TestCase
         $this->expectException(UMEException::class);
         $this->expectExceptionMessage("[{$label}] で指定されたファイルサイズの単位が不正です。[FIB]");
         //
-        $result             = RANGE::isInRange($this->ume, $value, $key, $conditions, $response);
+        $result             = RANGE::isInRange($this->ume, $value, $key, $conditions, $resobj);
     }
     
     

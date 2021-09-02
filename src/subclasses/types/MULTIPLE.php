@@ -39,7 +39,7 @@ class MULTIPLE
         if(!REQUIREMENT::should_validate($ume, $data, $key, $conditions, $resobj))
         {
             if($resobj->on_error)   { $resobj->has_error = true; }
-            return ($resobj->has_error) ? null : $result;
+            return $data;
         }
         
         if(!is_array($data))
@@ -51,7 +51,9 @@ class MULTIPLE
         $i = 0;
         foreach($data as $src)
         {
-            $resobj->on_error     = false;
+            $resobj->on_error   = false;
+            
+            $resobj->index      = ":{$i}";
             
             // バリデート
             $result[]   = ($conditions["method"] === UME::FILES)

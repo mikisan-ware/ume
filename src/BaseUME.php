@@ -234,13 +234,18 @@ abstract class BaseUME implements UME
      */
     protected function register_labels(array $labels): UME
     {
-        $present_keys   = array_keys($this->labels);
-        $attempt_keys   = array_keys($labels);
-        foreach($attempt_keys as $key)
+        foreach($labels as $lang => $value)
         {
-            if(in_array($key, $present_keys, true))
+            if(!isset($this->labels[$lang]))    { continue; }
+            $present_keys   = array_keys($this->labels[$lang]);
+            $attempt_keys   = array_keys($value);
+            
+            foreach($attempt_keys as $key)
             {
-                throw new UMEException("register_labels() に与えられたラベル {$key} は既に規定されています。");
+                if(in_array($key, $present_keys, true))
+                {
+                    throw new UMEException("register_labels() に与えられたラベル {$lang}.{$key} は既に規定されています。");
+                }
             }
         }
         
@@ -339,7 +344,10 @@ abstract class BaseUME implements UME
             $response_set->info[$i]->has_error  = $response->has_error;
             $response_set->info[$i]->error      = $response->VE;
             $response_set->info[$i]->offset     = $response->offset;
-            $response_set->info[$i]->src        = $response->src;
+            if(UMESettings::RESULT_INCLUDES_SOURCE)
+            {
+                $response_set->info[$i]->src    = $response->src;
+            }
             $response_set->data[$i]             = $response->dist;
             
             $i++;
@@ -369,7 +377,10 @@ abstract class BaseUME implements UME
         $response_set->info->has_error  = $response->has_error;
         $response_set->info->error      = $response->VE;
         $response_set->info->offset     = $response->offset;
-        $response_set->info->src        = $response->src;
+        if(UMESettings::RESULT_INCLUDES_SOURCE)
+        {
+            $response_set->info->src        = $response->src;
+        }
         $response_set->data             = $response->dist;
         
         return $response_set;

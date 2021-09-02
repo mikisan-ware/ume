@@ -57,6 +57,45 @@ class VALUE_Test extends TestCase
         $this->assertSame($value, $result);
     }
     
+    public function test_do_validate_not_required_empty_value()
+    {
+        $key        = "test";
+        $conditions = [
+            "type" => "text", "min" => PHP_INT_MIN, "max" => PHP_INT_MAX, 
+            "auto_correct" => true, "filter" => null, "trim" => UME::TRIM_ALL, "null_byte" => false,
+            "method" => UME::GET, "require" => false
+        ];
+        $type       = $conditions["type"];
+        $resobj     = $this->get_resobj();
+        $labels     = $this->ume->getLabels();
+        $label      = $labels["ja_JP"][$key] ?? $key;
+        //
+        $value      = "";
+        $result     = VALUE::validate($this->ume, $value, $key, $conditions, $resobj);
+        $this->assertSame(false, $resobj->on_error);
+        $this->assertSame("", $result);
+    }
+    
+    public function test_do_validate_force_required_empty_value()
+    {
+        $key        = "test";
+        $conditions = [
+            "type" => "text", "min" => PHP_INT_MIN, "max" => PHP_INT_MAX, 
+            "auto_correct" => true, "filter" => null, "trim" => UME::TRIM_ALL, "null_byte" => false,
+            "method" => UME::GET, "require" => UME::FORCE_REQUIRED
+        ];
+        $type       = $conditions["type"];
+        $resobj     = $this->get_resobj();
+        $labels     = $this->ume->getLabels();
+        $label      = $labels["ja_JP"][$key] ?? $key;
+        //
+        $value      = "";
+        $result     = VALUE::validate($this->ume, $value, $key, $conditions, $resobj);
+        $this->assertSame(true, $resobj->on_error);
+        $this->assertSame("[$label] は必須項目です。", $resobj->VE[0]);
+        $this->assertSame("", $result);
+    }
+    
     /**
      * text バリデートテスト choice内
      */
@@ -92,7 +131,7 @@ class VALUE_Test extends TestCase
         //
         $value      = "あいうえ";
         $result     = VALUE::validate($this->ume, $value, $key, $conditions, $resobj);
-        $this->assertSame(null, $result);
+        $this->assertSame("あいうえ", $result);
     }
     
     
@@ -112,7 +151,7 @@ class VALUE_Test extends TestCase
         //
         $value      = "さしす";
         $result     = VALUE::validate($this->ume, $value, $key, $conditions, $resobj);
-        $this->assertSame(null, $result);
+        $this->assertSame("さしす", $result);
     }
     
     /**
@@ -188,7 +227,7 @@ class VALUE_Test extends TestCase
         //
         $value      = "１２３123";
         $result     = VALUE::validate($this->ume, $value, $key, $conditions, $resobj);
-        $this->assertSame(null, $result);
+        $this->assertSame("１２３123", $result);
         $this->assertSame("[テスト] は整数でなければなりません。", $resobj->VE[0]);
     }
     
@@ -244,7 +283,7 @@ class VALUE_Test extends TestCase
         //
         $value      = "１２３123";
         $result     = VALUE::validate($this->ume, $value, $key, $conditions, $resobj);
-        $this->assertSame(null, $result);
+        $this->assertSame("１２３123", $result);
         $this->assertSame("[テスト] には半角数字以外が含まれています。", $resobj->VE[0]);
     }
     

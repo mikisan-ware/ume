@@ -19,10 +19,11 @@ use \mikisan\core\util\str\STR;
 class UMESettings
 {
     
-    const   ENCODE              = "UTF-8";
-    const   DEFAULT_MAX_STRING  = 4096;
-    const   DEFAULT_METHOD      = UME::POST;
-    const   DEFAULT_REQUIRE     = false;
+    const   ENCODE                  = "UTF-8";
+    const   DEFAULT_MAX_STRING      = 4096;
+    const   DEFAULT_METHOD          = UME::POST;
+    const   DEFAULT_REQUIRE         = false;
+    const   RESULT_INCLUDES_SOURCE  = true;
     
     public static function types(): array
     {

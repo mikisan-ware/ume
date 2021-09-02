@@ -37,7 +37,7 @@ class SINGLE
         if(!REQUIREMENT::should_validate($ume, $src, $key, $conditions, $resobj))
         {
             if($resobj->on_error)   { $resobj->has_error = true; }
-            return ($resobj->has_error) ? null : $src ;
+            return $src ;
         }
         
         // バリデート

@@ -88,7 +88,7 @@ class MULTIPLE_Test extends TestCase
         //
         $file = MULTIPLE::validate($this->ume, $src, $key, $conditions, $resobj);
         $this->assertSame(true, $resobj->on_error);
-        $this->assertSame("[テスト] は整数でなければなりません。", $resobj->VE[0]);
+        $this->assertSame("[テスト:2] は整数でなければなりません。", $resobj->VE[0]);
         $this->assertCount(1, $resobj->offset);
         $this->assertContains(2, $resobj->offset);
     }
@@ -166,8 +166,8 @@ class MULTIPLE_Test extends TestCase
         //
         $file = MULTIPLE::validate($this->ume, $data, $key, $conditions, $resobj);
         $this->assertSame(true, $resobj->on_error);     
-        $this->assertSame("[{$label}] のファイルタイプは許可されていません。（許容値：{$note}）", $resobj->VE[0]);
-        $this->assertSame("[{$label}] のファイルタイプは許可されていません。（許容値：{$note}）", $resobj->VE[1]);
+        $this->assertSame("[{$label}:0] のファイルタイプは許可されていません。（許容値：{$note}）", $resobj->VE[0]);
+        $this->assertSame("[{$label}:1] のファイルタイプは許可されていません。（許容値：{$note}）", $resobj->VE[1]);
         $this->assertCount(2, $resobj->offset);
         $this->assertContains(0, $resobj->offset);
         $this->assertContains(1, $resobj->offset);

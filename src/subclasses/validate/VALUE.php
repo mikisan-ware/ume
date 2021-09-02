@@ -23,21 +23,21 @@ class VALUE
      * $conditions["method"] => UME::FILES 以外のバリデート
      * 
      * @param   UME         $ume
-     * @param   mixed       $value
+     * @param   mixed       $src
      * @param   string      $key
      * @param   array       $conditions
      * @param   \stdClass   $resobj
      * @return  mixed
      */
-    public static function validate(UME $ume, $value, string $key, array $conditions, \stdClass $resobj)
+    public static function validate(UME $ume, $src, string $key, array $conditions, \stdClass $resobj)
     {
         // 事前処理：事前フィルタ適用、オートコレクト、NULLバイト除去、トリム
-        $value  = self::prepare($ume, $value, $conditions);
+        $value  = self::prepare($ume, $src, $conditions);
         
         // バリデーション処理
         if(!REQUIREMENT::should_force_validate($ume, $value, $key, $conditions, $resobj))
         {
-            return $value;
+            return ($resobj->on_error) ? $src : $value;
         }
         
         // バリデーション処理
@@ -58,7 +58,7 @@ class VALUE
             $value  = CLOSER::do($ume->getClosers(), $value, $conditions);
         }
         
-        return ($resobj->on_error) ? null : $value;
+        return ($resobj->on_error) ? $src : $value;
     }
     
     /**

@@ -119,10 +119,9 @@ class VALIDATE_Test extends TestCase
         //
         $this->assertSame(1234, $response->dist[$prefix][1][2][3]);
         $this->assertSame(5678, $response->dist[$prefix][1][2][4]);
-        $this->assertSame(null, $response->dist[$prefix][1][3][1]);
-        $this->assertSame(null, $response->dist[$prefix][1][3][7]);
+        $this->assertSame("abc", $response->dist[$prefix][1][3][1]);
+        $this->assertSame("九〇一二", $response->dist[$prefix][1][3][7]);
         //
-        $this->assertSame(null, $response->dist[$prefix][1][3][1]);
         $this->assertCount(2, $response->VE[$prefix]);
         $this->assertSame("[データ値:1:3:1] は整数でなければなりません。", $response->VE[$prefix][0]);
         $this->assertSame("[データ値:1:3:7] は整数でなければなりません。", $response->VE[$prefix][1]);

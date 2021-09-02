@@ -180,4 +180,64 @@ class REQUIREMENT_Test extends TestCase
         $this->assertSame(false, $resobj->on_error);
     }
     
+    /**
+     * 必須項目が入力された時の処理テスト
+     */
+    public function test_should_force_validate_has_value()
+    {
+        $key        = "test";
+        $conditions = [
+            "type" => "int", "min" => PHP_INT_MIN, "max" => PHP_INT_MAX, 
+            "auto_correct" => true, "filter" => "base64", "trim" => UME::TRIM_ALL, "null_byte" => false,
+            "method" => UME::GET, "require" => UME::FORCE_REQUIRED
+        ];
+        $value      = "あいうえお漢字<script>alert(\"XSS!\");ABC12345=!*";
+        $resobj   = $this->get_resobj();
+        //
+        $result     = REQUIREMENT::should_force_validate($this->ume, $value, $key, $conditions, $resobj);
+        $this->assertSame(true, $result);
+        $this->assertSame(false, $resobj->on_error);
+    }
+    
+    /**
+     * 必須項目が入力された時の処理テスト
+     */
+    public function test_should_force_validate_false_has_empty()
+    {
+        $key        = "test";
+        $conditions = [
+            "type" => "int", "min" => PHP_INT_MIN, "max" => PHP_INT_MAX, 
+            "auto_correct" => true, "filter" => "base64", "trim" => UME::TRIM_ALL, "null_byte" => false,
+            "method" => UME::GET, "require" => false
+        ];
+        $value      = "";
+        $resobj   = $this->get_resobj();
+        //
+        $result     = REQUIREMENT::should_force_validate($this->ume, $value, $key, $conditions, $resobj);
+        $this->assertSame(false, $result);
+        $this->assertSame(false, $resobj->on_error);
+    }
+    
+    /**
+     * 必須項目が入力された時の処理テスト
+     */
+    public function test_should_force_validate_force_required_has_empty()
+    {
+        $key        = "test";
+        $conditions = [
+            "type" => "int", "min" => PHP_INT_MIN, "max" => PHP_INT_MAX, 
+            "auto_correct" => true, "filter" => "base64", "trim" => UME::TRIM_ALL, "null_byte" => false,
+            "method" => UME::GET, "require" => UME::FORCE_REQUIRED
+        ];
+        $value      = "";
+        $resobj     = $this->get_resobj();
+        $labels     = $this->ume->getLabels();
+        $label      = $labels["ja_JP"][$key] ?? $key;
+        //
+        $result     = REQUIREMENT::should_force_validate($this->ume, $value, $key, $conditions, $resobj);
+        $this->assertSame(false, $result);
+        $this->assertSame(true, $resobj->on_error);
+        $this->assertSame("[$label] は必須項目です。", $resobj->VE[0]);
+    }
+    
 }

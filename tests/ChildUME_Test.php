@@ -79,7 +79,7 @@ class ChildUME_Test extends TestCase
         $this->assertSame(true, $result->has_error);
         $this->assertSame("[$label] は必須項目です。", $result->info->error["page"][0]);
         $this->assertSame("", $result->info->src[$key]);
-        $this->assertSame(null, $result->data[$key]);
+        $this->assertSame("", $result->data[$key]);
     }
     
     public function test_validate_value_undefined_method()
@@ -169,8 +169,8 @@ class ChildUME_Test extends TestCase
         $label      = $labels["ja_JP"][$key] ?? $key;
         $this->assertSame("[{$label}] には英字以外が含まれています。", $result->info[1]->error[$key][0]);
         $this->assertSame("４５６７８", $result->info[1]->src[$key]);
-        $this->assertSame(null, $result->data[1]["page"]);
-        $this->assertSame(null, $result->data[1]["test2"]);
+        $this->assertSame("ｈｉｊｋｌｍｎ", $result->data[1]["page"]);
+        $this->assertSame("４５６７８", $result->data[1]["test2"]);
         $this->assertSame("45678", $result->data[1]["test3"]);
         //
         $this->assertCount(0, $result->info[2]->error);
@@ -233,6 +233,46 @@ class ChildUME_Test extends TestCase
         $this->assertSame(false, $result->has_error);
         $this->assertSame($_GET[$key], $result->info->src[$key]);
         $this->assertSame(12345, $result->data[$key]);
+    }
+    
+    public function test_conflict_register_types()
+    {
+        $this->expectException(UMEException::class);
+        $this->expectExceptionMessage("register_types() に与えられたタイプ int は既に規定されています。");
+        //
+        $this->ume->conflict_register_types();
+    }
+    
+    public function test_conflict_register_filters()
+    {
+        $this->expectException(UMEException::class);
+        $this->expectExceptionMessage("register_filters() に与えられたフィルタ int は既に規定されています。");
+        //
+        $this->ume->conflict_register_filters();
+    }
+    
+    public function test_conflict_register_closers()
+    {
+        $this->expectException(UMEException::class);
+        $this->expectExceptionMessage("register_closers() に与えられた事後フィルタ base64 は既に規定されています。");
+        //
+        $this->ume->conflict_register_closers();
+    }
+    
+    public function test_conflict_register_rules()
+    {
+        $this->expectException(UMEException::class);
+        $this->expectExceptionMessage("register_rules() に与えられたルール page は既に規定されています。");
+        //
+        $this->ume->conflict_register_rules();
+    }
+    
+    public function test_conflict_register_labels()
+    {
+        $this->expectException(UMEException::class);
+        $this->expectExceptionMessage("register_labels() に与えられたラベル ja_JP.page は既に規定されています。");
+        //
+        $this->ume->conflict_register_labels();
     }
     
 }

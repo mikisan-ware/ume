@@ -38,4 +38,5 @@ class Child2UME_Test extends TestCase
         //
         $ume    = new Child2UME();
     }
+    
 }

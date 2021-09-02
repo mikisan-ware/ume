@@ -96,7 +96,7 @@ class Multiple2UME_Test extends TestCase
         $this->assertSame(true, $result->has_error);
         $this->assertSame("[$label] は必須項目です。", $result->info->error[$prefix][0]);
         $this->assertSame("", $result->info->src[$prefix]);
-        $this->assertSame(null, $result->data[$prefix]);
+        $this->assertSame("", $result->data[$prefix]);
     }
     
     public function  test_validate_value_force_empty()
